@@ -113,7 +113,7 @@ interface SliderProps {
 }
 
 const CustomSlider: React.FC<SliderProps> = ({ label, min, max, step, value, onChange, format, isBaseline }) => (
-  <div className="space-y-1.5 transition-opacity duration-300">
+  <div className="space-y-1.5 transition-opacity duration-300 w-full">
     <div className="flex justify-between items-center">
       <span className="text-slate-400 font-semibold uppercase tracking-widest text-[9px] flex items-center">
         {isBaseline && <Lock size={8} className="mr-1.5 text-blue-500" />}
@@ -123,15 +123,17 @@ const CustomSlider: React.FC<SliderProps> = ({ label, min, max, step, value, onC
         {format(value)}
       </span>
     </div>
-    <input 
-      type="range" 
-      min={min} 
-      max={max} 
-      step={step} 
-      value={value} 
-      onChange={(e) => onChange(parseFloat(e.target.value))} 
-      className={`w-full h-1 rounded-lg cursor-pointer transition-all ${isBaseline ? 'bg-slate-700 accent-blue-500 hover:accent-blue-400' : 'bg-slate-700 accent-emerald-500 hover:accent-emerald-400'}`}
-    />
+    <div className="py-2"> {/* Added touch padding for mobile slider interaction */}
+      <input 
+        type="range" 
+        min={min} 
+        max={max} 
+        step={step} 
+        value={value} 
+        onChange={(e) => onChange(parseFloat(e.target.value))} 
+        className={`w-full h-1 rounded-lg cursor-pointer transition-all ${isBaseline ? 'bg-slate-700 accent-blue-500 hover:accent-blue-400' : 'bg-slate-700 accent-emerald-500 hover:accent-emerald-400'}`}
+      />
+    </div>
   </div>
 );
 
@@ -323,7 +325,8 @@ export default function App() {
       setTimeout(() => {
         const element = document.getElementById('main-content');
         if (element) {
-          const navHeight = 80;
+          // Adjust scroll offset based on screen size (mobile nav is taller)
+          const navHeight = window.innerWidth < 1024 ? 120 : 80;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - navHeight;
           window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
@@ -344,31 +347,52 @@ export default function App() {
           0% { transform: translateY(-200%); }
           100% { transform: translateY(400%); }
         }
+        /* Mobile-friendly horizontal scrolling without ugly scrollbars */
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
       `}</style>
 
       {activeTab === 'deck' ? (
         <DigitalFlipbook />
       ) : (
       <>
-        {/* Premium Header Navigation */}
-        <nav className="fixed top-0 w-full bg-[#050810]/80 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300">
-          <div className="max-w-[100rem] mx-auto px-6 h-20 flex items-center justify-between">
-            <div className="flex items-center space-x-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)]">
-                <Compass size={20} className="text-white" />
+        {/* Premium Header Navigation (Mobile Optimized) */}
+        <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl">
+          <div className="max-w-[100rem] mx-auto px-4 md:px-6 py-3 lg:py-0 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-0">
+            
+            {/* Top Row: Logo & Mobile Action Button */}
+            <div className="flex items-center justify-between w-full lg:w-auto">
+              <div className="flex items-center space-x-3 sm:space-x-5">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.3)] shrink-0">
+                  <Compass size={18} className="text-white sm:w-5 sm:h-5" />
+                </div>
+                <div>
+                  <div className="font-extrabold tracking-widest text-white leading-none text-sm sm:text-lg">1816 MAXWELL</div>
+                  <div className="text-[8px] sm:text-[10px] text-blue-400 uppercase tracking-widest font-semibold mt-1">Oceanside, Oregon • Grandfathered</div>
+                </div>
               </div>
-              <div>
-                <div className="font-extrabold tracking-widest text-white leading-none text-lg">1816 MAXWELL</div>
-                <div className="text-[10px] text-blue-400 uppercase tracking-widest font-semibold mt-1">Oceanside, Oregon • Grandfathered</div>
-              </div>
+              
+              {/* Mobile Data Room Button */}
+              <button 
+                onClick={() => setIsModalOpen(true)}
+                className="lg:hidden flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[9px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300"
+              >
+                Data Room <ArrowRight size={12} className="ml-1.5" />
+              </button>
             </div>
             
-            <div className="hidden lg:flex items-center space-x-2 bg-slate-900/40 p-1 rounded-xl border border-slate-800/50 backdrop-blur-md">
+            {/* Scrollable Tabs Row (Desktop & Mobile) */}
+            <div className="flex items-center overflow-x-auto hide-scrollbar w-full lg:w-auto bg-slate-900/40 lg:p-1 rounded-xl border border-transparent lg:border-slate-800/50 backdrop-blur-md snap-x">
               {['overview', 'plan', 'comps', 'financials', 'team', 'deck'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => handleTabClick(tab)}
-                  className={`px-5 py-2 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-lg ${
+                  className={`px-4 sm:px-5 py-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-lg shrink-0 snap-center ${
                     activeTab === tab 
                       ? 'bg-blue-500/20 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.2)] border border-blue-500/30' 
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
@@ -379,9 +403,10 @@ export default function App() {
               ))}
             </div>
 
+            {/* Desktop Data Room Button */}
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:-translate-y-0.5 transition-all duration-300"
+              className="hidden lg:flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:-translate-y-0.5 transition-all duration-300"
             >
               Request Data Room <ArrowRight size={14} className="ml-2" />
             </button>
@@ -389,7 +414,7 @@ export default function App() {
         </nav>
 
         {/* Hero Animated Sliding Panels */}
-        <div className="relative min-h-[90vh] flex items-center justify-center pt-20 overflow-hidden">
+        <div className="relative min-h-[85vh] lg:min-h-[90vh] flex items-center justify-center pt-28 lg:pt-20 overflow-hidden">
           <div className="absolute inset-0 z-0">
             {heroSlides.map((slide, index) => (
               <div
@@ -403,36 +428,36 @@ export default function App() {
                   alt={slide.title} 
                   className="w-full h-full object-cover scale-105 transition-transform duration-[7000ms] ease-out filter brightness-[0.4]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050810] via-transparent to-[#050810]/80"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050810] via-[#050810]/40 to-[#050810]/80"></div>
               </div>
             ))}
           </div>
 
-          <div className="relative z-20 max-w-[100rem] mx-auto px-6 w-full grid lg:grid-cols-12 gap-12 items-center">
-            <div className="lg:col-span-8 space-y-6">
-              <span className="inline-flex items-center px-4 py-1.5 bg-blue-500/10 text-blue-300 rounded-full text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-                <Flame size={14} className="mr-2 text-blue-400 animate-pulse" /> Confidential LP Presentation
+          <div className="relative z-20 max-w-[100rem] mx-auto px-4 md:px-6 w-full grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            <div className="lg:col-span-8 space-y-5 lg:space-y-6">
+              <span className="inline-flex items-center px-3 py-1.5 sm:px-4 bg-blue-500/10 text-blue-300 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+                <Flame size={12} className="mr-1.5 sm:mr-2 text-blue-400 animate-pulse" /> Confidential LP Presentation
               </span>
-              <div className="space-y-3">
-                <h2 className="text-xl font-mono text-blue-400 tracking-widest uppercase font-semibold">
+              <div className="space-y-2 lg:space-y-3">
+                <h2 className="text-sm sm:text-xl font-mono text-blue-400 tracking-widest uppercase font-semibold">
                   {heroSlides[currentHeroSlide].subtitle}
                 </h2>
-                <h1 className="text-5xl md:text-6xl lg:text-7xl font-light text-white leading-none tracking-tight">
-                  Redefining <span className="font-serif italic text-blue-200 drop-shadow-[0_0_15px_rgba(191,219,254,0.3)]">Luxury</span>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-white leading-tight tracking-tight">
+                  Redefining <span className="font-serif italic text-blue-200 drop-shadow-[0_0_15px_rgba(191,219,254,0.3)] block sm:inline">Luxury</span>
                 </h1>
               </div>
-              <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed">
+              <p className="text-base sm:text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed">
                 {heroSlides[currentHeroSlide].desc}
               </p>
               
-              <div className="flex flex-wrap gap-5 pt-6">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 lg:pt-6">
                 <button 
                   onClick={() => handleTabClick('deck')}
-                  className="px-8 py-3 bg-white text-slate-950 font-bold rounded-xl text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all duration-300 flex items-center shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                  className="w-full sm:w-auto justify-center px-6 lg:px-8 py-3.5 sm:py-3 bg-white text-slate-950 font-bold rounded-xl text-[10px] lg:text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all duration-300 flex items-center shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                 >
                   Deep-Dive Portfolio <ArrowDownRight size={16} className="ml-3" />
                 </button>
-                <div className="flex items-center space-x-3 px-6 py-2">
+                <div className="flex justify-center sm:justify-start items-center space-x-3 px-6 py-2">
                   {heroSlides.map((_, i) => (
                     <button
                       key={i}
@@ -446,27 +471,27 @@ export default function App() {
               </div>
             </div>
 
-            <div className="lg:col-span-4 bg-transparent space-y-8 relative">
-              <h3 className="text-white font-bold uppercase tracking-widest text-[11px] flex justify-between items-center">
+            <div className="lg:col-span-4 bg-transparent space-y-6 lg:space-y-8 relative mt-8 lg:mt-0">
+              <h3 className="text-white font-bold uppercase tracking-widest text-[10px] lg:text-[11px] flex justify-between items-center">
                 <span>Financial Foundation</span>
                 <span className="text-blue-400 font-mono">1816 Maxwell</span>
               </h3>
               
-              <GoldBeamX className="my-0 mb-8 opacity-50" />
+              <GoldBeamX className="my-0 mb-6 lg:mb-8 opacity-50" />
 
-              <div className="space-y-6">
+              <div className="space-y-5 lg:space-y-6">
                 {[
                   { label: "Fully Capitalized Budget", val: "$22.00M", desc: "Hard & soft cost contingency included" },
                   { label: "Required Equity Pool", val: "$8M - $10M", desc: "Available for programmatic LP entry" },
                   { label: "Stabilized Yield On Cost", val: "9.03%", desc: "Based on Columbia Hospitality model" },
                   { label: "Total Gross Build", val: "40,000 GSF", desc: "Spanning three distinct guest layouts" }
                 ].map((m, idx) => (
-                  <div key={idx} className="flex justify-between items-start pb-4">
-                    <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-widest font-medium">{m.label}</p>
-                      <p className="text-[10px] text-slate-500 mt-1.5 leading-relaxed">{m.desc}</p>
+                  <div key={idx} className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-slate-800/30 sm:border-0">
+                    <div className="mb-2 sm:mb-0">
+                      <p className="text-[10px] sm:text-xs text-slate-400 uppercase tracking-widest font-medium">{m.label}</p>
+                      <p className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed hidden sm:block">{m.desc}</p>
                     </div>
-                    <div className="text-xl font-mono font-bold text-white text-right drop-shadow-md">{m.val}</div>
+                    <div className="text-lg sm:text-xl font-mono font-bold text-white text-left sm:text-right drop-shadow-md">{m.val}</div>
                   </div>
                 ))}
               </div>
@@ -476,30 +501,30 @@ export default function App() {
 
         <GoldBeamX />
 
-        <main id="main-content" className="max-w-[100rem] mx-auto px-6 py-12 relative scroll-mt-24">
+        <main id="main-content" className="max-w-[100rem] mx-auto px-4 md:px-6 py-8 lg:py-12 relative scroll-mt-32">
           
           {/* Executive Summary */}
           {activeTab === 'overview' && (
-            <div className="space-y-20 animate-in fade-in duration-700">
-              <div className="grid lg:grid-cols-12 gap-16 items-center">
-                <div className="lg:col-span-7 space-y-8">
-                  <h3 className="text-4xl lg:text-5xl font-light text-white leading-tight tracking-tight">Pre-Development Progress</h3>
-                  <p className="text-slate-300 text-lg leading-relaxed">
+            <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
+              <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+                <div className="lg:col-span-7 space-y-6 lg:space-y-8">
+                  <h3 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white leading-tight tracking-tight">Pre-Development Progress</h3>
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
                     With over 16 months of intense pre-development execution and <strong className="text-white font-medium">$500,000.00 spent on comprehensive due diligence</strong>, Project 1816 Maxwell represents a significantly de-risked development pipeline.
                   </p>
-                  <p className="text-slate-300 text-lg leading-relaxed">
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
                     A welcoming community presentation has cleared the baseline municipal expectations, and local zoning status allows immediate reinitiation of structural approvals. 
                   </p>
 
-                  <GoldBeamX className="my-10 opacity-30" />
+                  <GoldBeamX className="my-8 lg:my-10 opacity-30" />
 
-                  <div className="grid sm:grid-cols-2 gap-8 pt-2">
+                  <div className="grid sm:grid-cols-2 gap-6 lg:gap-8 pt-2">
                     {PRE_DEV_TIMELINE.map((item, idx) => (
-                      <div key={idx} className="flex items-start space-x-4 pt-4">
-                        <ShieldCheck className="text-emerald-400 shrink-0 mt-1" size={24} />
+                      <div key={idx} className="flex items-start space-x-4 pt-2 sm:pt-4">
+                        <ShieldCheck className="text-emerald-400 shrink-0 mt-1" size={20} />
                         <div>
-                          <p className="text-sm text-slate-200 font-medium leading-relaxed">{item.milestone}</p>
-                          <p className="text-xs text-emerald-400/80 uppercase mt-2 tracking-widest font-bold font-mono">{item.status} • {item.cost}</p>
+                          <p className="text-xs sm:text-sm text-slate-200 font-medium leading-relaxed">{item.milestone}</p>
+                          <p className="text-[10px] sm:text-xs text-emerald-400/80 uppercase mt-1 sm:mt-2 tracking-widest font-bold font-mono">{item.status} • {item.cost}</p>
                         </div>
                       </div>
                     ))}
@@ -507,18 +532,18 @@ export default function App() {
                 </div>
 
                 <div className="lg:col-span-5 relative h-full flex items-center">
-                  <div className="relative w-full h-[600px] rounded-3xl overflow-hidden border border-slate-700/50 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+                  <div className="relative w-full h-[400px] sm:h-[500px] lg:h-[600px] rounded-3xl overflow-hidden border border-slate-700/50 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
                     <img 
                       src={IMAGES.scenic2} 
                       alt="Landscape Rendering" 
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050810] via-[#050810]/30 to-transparent pointer-events-none"></div>
-                    <div className="absolute bottom-8 left-8 right-8 bg-slate-900/70 backdrop-blur-xl border border-slate-700 p-8 rounded-2xl pointer-events-none">
-                      <h4 className="text-white font-bold text-lg mb-3 flex items-center tracking-wide">
-                        <Waves size={20} className="mr-3 text-blue-400" /> Irreplaceable Real Estate
+                    <div className="absolute bottom-6 left-6 right-6 lg:bottom-8 lg:left-8 lg:right-8 bg-slate-900/70 backdrop-blur-xl border border-slate-700 p-5 lg:p-8 rounded-2xl pointer-events-none">
+                      <h4 className="text-white font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center tracking-wide">
+                        <Waves size={18} className="mr-2 sm:mr-3 text-blue-400" /> Irreplaceable Real Estate
                       </h4>
-                      <p className="text-sm text-slate-300 leading-relaxed">Grandfathered site for premium hotel development. Current state of local zoning on Oregon Coast makes repeating this designation impossible.</p>
+                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">Grandfathered site for premium hotel development. Current state of local zoning on Oregon Coast makes repeating this designation impossible.</p>
                     </div>
                   </div>
                 </div>
@@ -528,64 +553,64 @@ export default function App() {
 
           {/* Master Plan Tab */}
           {activeTab === 'plan' && (
-            <div className="space-y-20 animate-in fade-in duration-700">
-              <div className="grid lg:grid-cols-12 gap-16 items-start">
-                <div className="lg:col-span-7 space-y-10">
-                  <h3 className="text-4xl lg:text-5xl font-light text-white tracking-tight">Three Structures, Integrated Luxury</h3>
-                  <p className="text-slate-300 text-lg leading-relaxed">
+            <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
+              <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+                <div className="lg:col-span-7 space-y-8 lg:space-y-10">
+                  <h3 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white tracking-tight">Three Structures, Integrated Luxury</h3>
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
                     The 40,000 square feet structural layout features three individual custom buildings. This minimizes programmatic block footprint while maximizing privacy, ventilation, and sightlines.
                   </p>
 
-                  <GoldBeamX className="my-10 opacity-30" />
+                  <GoldBeamX className="my-8 lg:my-10 opacity-30" />
 
-                  <div className="space-y-12">
+                  <div className="space-y-8 lg:space-y-12">
                     {[
                       { num: "01", name: "Building One", details: "[6] 3-Story Luxury Units averaging 1,200 SQ FT each. Built for private premium group packages." },
                       { num: "02", name: "Building Two", details: "[6] 3-Story Luxury Units averaging 1,200 SQ FT each. Spaced for perfect coastline angles." },
                       { num: "03", name: "Building Three & Amenities", details: "[12] Luxury Rooms averaging 400 SQ FT each. Combines the Grand Lobby, Signature Restaurant, Rooftop Bar, Executive Conference Center, and Wellness Spa with Weight Room & Yoga facility." }
                     ].map((b, idx) => (
-                      <div key={idx} className="relative group flex items-start space-x-6">
-                        <span className="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-indigo-400 drop-shadow-md">{b.num}</span>
+                      <div key={idx} className="relative group flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-6">
+                        <span className="text-4xl sm:text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-indigo-400 drop-shadow-md">{b.num}</span>
                         <div>
-                          <h4 className="text-xl font-bold text-white mb-3 tracking-wide">{b.name}</h4>
-                          <p className="text-sm text-slate-400 leading-relaxed">{b.details}</p>
+                          <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-wide">{b.name}</h4>
+                          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{b.details}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 space-y-16">
+                <div className="lg:col-span-5 space-y-12 lg:space-y-16">
                   <div className="relative group">
-                    <div className="relative h-[380px] rounded-2xl overflow-hidden border border-slate-700/50 mb-6 bg-slate-200">
+                    <div className="relative h-[250px] sm:h-[380px] rounded-2xl overflow-hidden border border-slate-700/50 mb-4 sm:mb-6 bg-slate-200">
                       <img 
                         src={IMAGES.sitePlan} 
                         alt="Proposed Site Plan Diagram" 
-                        className="w-full h-full object-contain p-4 mix-blend-multiply"
+                        className="w-full h-full object-contain p-2 sm:p-4 mix-blend-multiply"
                       />
                     </div>
                     <div className="space-y-2">
-                      <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center">
-                        <LayoutTemplate size={18} className="mr-3 text-blue-400" /> Page 5 Site Layout Profile
+                      <h4 className="text-white font-bold text-[11px] sm:text-sm uppercase tracking-widest flex items-center">
+                        <LayoutTemplate size={16} className="mr-2 sm:mr-3 text-blue-400" /> Page 5 Site Layout Profile
                       </h4>
-                      <p className="text-sm text-slate-400 leading-relaxed">Details structural alignments for Building 1, 2, and 3 directly to Chinook Avenue.</p>
+                      <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">Details structural alignments for Building 1, 2, and 3 directly to Chinook Avenue.</p>
                     </div>
                   </div>
 
-                  <GoldBeamX className="opacity-30 my-8" />
+                  <GoldBeamX className="opacity-30 my-6 lg:my-8" />
 
                   <div className="relative group">
-                    <div className="relative h-[260px] rounded-2xl overflow-hidden border border-slate-700/50 mb-6">
+                    <div className="relative h-[180px] sm:h-[260px] rounded-2xl overflow-hidden border border-slate-700/50 mb-4 sm:mb-6">
                       <img 
                         src={IMAGES.mightyBuildings} 
                         alt="Mighty Buildings panel" 
                         className="w-full h-full object-cover filter brightness-[0.8]"
                       />
                     </div>
-                    <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center">
-                      <Leaf size={18} className="mr-3 text-emerald-400" /> First-Of-Its-Kind 3D Prefabrication
+                    <h4 className="text-white font-bold text-[11px] sm:text-sm uppercase tracking-widest flex items-center">
+                      <Leaf size={16} className="mr-2 sm:mr-3 text-emerald-400" /> First-Of-Its-Kind 3D Prefabrication
                     </h4>
-                    <p className="text-sm text-slate-400 mt-4 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-slate-400 mt-3 sm:mt-4 leading-relaxed">
                       Sponsor has established a formal engineering partnership with Mighty Buildings to utilize custom structural panels. Shrinks local construction logistics by months and reduces structural weight parameters on cliffside.
                     </p>
                   </div>
@@ -596,35 +621,35 @@ export default function App() {
 
           {/* Market & Comps Tab */}
           {activeTab === 'comps' && (
-            <div className="space-y-20 animate-in fade-in duration-700">
-              <div className="grid lg:grid-cols-12 gap-16 items-start">
-                <div className="lg:col-span-7 space-y-8">
-                  <h3 className="text-4xl lg:text-5xl font-light text-white tracking-tight">Oregon's High-Yield Elite Comps</h3>
-                  <p className="text-slate-300 text-lg leading-relaxed">
+            <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
+              <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+                <div className="lg:col-span-7 space-y-6 lg:space-y-8">
+                  <h3 className="text-3xl sm:text-4xl lg:text-5xl font-light text-white tracking-tight">Oregon's High-Yield Elite Comps</h3>
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
                     Fewer than <strong className="text-white font-medium">100 luxury hotel rooms</strong> serve the entire 5.5 Million annual traveler volume on the Oregon Coast. This dramatic imbalance drives extreme occupancies and pricing power.
                   </p>
-                  <p className="text-slate-300 text-lg leading-relaxed">
+                  <p className="text-slate-300 text-base sm:text-lg leading-relaxed">
                     By coordinating directly with Columbia Hospitality (who actively manages premium assets across the region), the financial pro forma targets highly realistic operational benchmarks.
                   </p>
 
-                  <GoldBeamX className="my-10 opacity-30" />
+                  <GoldBeamX className="my-8 lg:my-10 opacity-30" />
 
-                  <div className="grid sm:grid-cols-2 gap-12 pt-6">
+                  <div className="grid sm:grid-cols-2 gap-8 lg:gap-12 pt-4 lg:pt-6">
                     {COMPARATIVE_SET.map((comp, idx) => (
-                      <div key={idx} className="space-y-6">
+                      <div key={idx} className="space-y-4 sm:space-y-6">
                         <div className="flex justify-between items-start">
-                          <h4 className="font-bold text-xl text-white leading-tight tracking-wide">{comp.name}</h4>
+                          <h4 className="font-bold text-lg sm:text-xl text-white leading-tight tracking-wide">{comp.name}</h4>
                         </div>
-                        <div className="space-y-4 text-sm uppercase tracking-widest font-semibold">
-                          <div className="flex justify-between pb-3 text-slate-400">
+                        <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm uppercase tracking-widest font-semibold">
+                          <div className="flex justify-between pb-2 sm:pb-3 text-slate-400 border-b border-slate-800/50 sm:border-0">
                             <span>Keys</span>
                             <span className="text-white font-mono">{comp.keys}</span>
                           </div>
-                          <div className="flex justify-between pb-3 text-slate-400">
+                          <div className="flex justify-between pb-2 sm:pb-3 text-slate-400 border-b border-slate-800/50 sm:border-0">
                             <span>Avg ADR</span>
                             <span className="text-emerald-400 font-mono font-bold drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]">${comp.adr}</span>
                           </div>
-                          <div className="flex justify-between pb-3 text-slate-400">
+                          <div className="flex justify-between pb-2 sm:pb-3 text-slate-400 border-b border-slate-800/50 sm:border-0">
                             <span>Peak Rate</span>
                             <span className="text-white font-mono">${comp.maxAdr}</span>
                           </div>
@@ -633,55 +658,56 @@ export default function App() {
                             <span className="text-blue-400 font-mono font-bold">{comp.occupancy}</span>
                           </div>
                         </div>
-                        <GoldBeamX className="my-6 opacity-20" />
-                        <p className="text-sm text-slate-500 italic leading-relaxed pt-3">{comp.notable}</p>
+                        <GoldBeamX className="my-4 sm:my-6 opacity-20" />
+                        <p className="text-[11px] sm:text-sm text-slate-500 italic leading-relaxed pt-1 sm:pt-3">{comp.notable}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="lg:col-span-5 space-y-16 pl-10 relative">
-                  <GoldBeamY className="absolute left-0 top-0 opacity-30" />
+                <div className="lg:col-span-5 space-y-12 lg:space-y-16 pl-0 lg:pl-10 relative">
+                  <GoldBeamY className="hidden lg:block absolute left-0 top-0 opacity-30" />
+                  <GoldBeamX className="block lg:hidden my-8 opacity-30" />
                   
-                  <div className="space-y-8 relative">
-                    <h4 className="text-white font-mono text-[11px] uppercase tracking-[0.2em] pb-4 flex justify-between items-center relative z-10">
+                  <div className="space-y-6 lg:space-y-8 relative">
+                    <h4 className="text-white font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] pb-2 sm:pb-4 flex justify-between items-center relative z-10">
                       <span>Operator Assessment</span>
                       <span className="text-blue-400 font-bold drop-shadow-md">LHW Flag Option</span>
                     </h4>
-                    <GoldBeamX className="my-4 opacity-30" />
-                    <p className="text-sm text-slate-300 leading-relaxed relative z-10">
+                    <GoldBeamX className="my-3 sm:my-4 opacity-30 hidden sm:block" />
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed relative z-10">
                       Sponsorship is in active negotiations with <strong className="text-white">Leading Hotels of the World (LHW)</strong> to add 1816 Maxwell to their exclusive global portfolio.
                     </p>
-                    <p className="text-sm text-slate-300 leading-relaxed relative z-10">
+                    <p className="text-xs sm:text-sm text-slate-300 leading-relaxed relative z-10">
                       Aligning with LHW's elite infrastructure provides the asset instant access to their <strong className="text-white">4.5 million Leaders Club members</strong>, significantly lowering client acquisition costs and maximizing distribution reach compared to traditional hard brands.
                     </p>
-                    <div className="p-8 bg-transparent text-center relative z-10">
-                      <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-semibold">Underwritten Baseline ADR</p>
-                      <p className="text-4xl font-mono font-black text-emerald-400 mt-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">$1,038</p>
-                      <p className="text-sm text-slate-500 mt-4 leading-relaxed">Sponsor believes peak summer rates will exceed $2,000/night.</p>
+                    <div className="p-6 sm:p-8 bg-slate-900/30 sm:bg-transparent rounded-xl sm:rounded-none text-center relative z-10">
+                      <p className="text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400 font-semibold">Underwritten Baseline ADR</p>
+                      <p className="text-3xl sm:text-4xl font-mono font-black text-emerald-400 mt-3 sm:mt-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">$1,038</p>
+                      <p className="text-xs sm:text-sm text-slate-500 mt-3 sm:mt-4 leading-relaxed">Sponsor believes peak summer rates will exceed $2,000/night.</p>
                     </div>
                   </div>
                   
-                  <GoldBeamX className="my-8 opacity-30" />
+                  <GoldBeamX className="my-6 lg:my-8 opacity-30" />
 
                   <div className="relative">
-                     <h4 className="text-white font-mono text-[11px] uppercase tracking-[0.2em] pb-4 mb-6 flex items-center">
-                       <MapPin size={18} className="mr-3 text-blue-400" /> Drive-Market Demographics
+                     <h4 className="text-white font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] pb-3 sm:pb-4 mb-4 sm:mb-6 flex items-center">
+                       <MapPin size={16} className="mr-2 sm:mr-3 text-blue-400" /> Drive-Market Demographics
                      </h4>
-                     <p className="text-sm text-slate-400 leading-relaxed">
+                     <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
                        Oceanside accesses a highly affluent drive-market constrained by the Oregon Land Conservation and Development Commission (LCDC), which strictly caps new luxury coastal developments. 
                      </p>
-                     <ul className="text-sm text-slate-300 mt-8 space-y-4 font-mono tracking-wide">
-                       <li className="flex justify-between pb-3 items-center">
-                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-3"></div>Portland MSA</span> 
+                     <ul className="text-xs sm:text-sm text-slate-300 mt-6 sm:mt-8 space-y-3 sm:space-y-4 font-mono tracking-wide">
+                       <li className="flex justify-between pb-2 sm:pb-3 items-center border-b border-slate-800/40 sm:border-0">
+                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-2 sm:mr-3"></div>Portland MSA</span> 
                          <span className="text-blue-400 font-bold">1.5 Hr Drive</span>
                        </li>
-                       <li className="flex justify-between pb-3 items-center">
-                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-3"></div>Seattle MSA</span> 
+                       <li className="flex justify-between pb-2 sm:pb-3 items-center border-b border-slate-800/40 sm:border-0">
+                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-2 sm:mr-3"></div>Seattle MSA</span> 
                          <span className="text-blue-400 font-bold">3.5 Hr Drive</span>
                        </li>
                        <li className="flex justify-between items-center pt-1">
-                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-3"></div>Silicon Valley (PDX)</span> 
+                         <span className="flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-slate-500 mr-2 sm:mr-3"></div>Silicon Valley (PDX)</span> 
                          <span className="text-blue-400 font-bold">1.5 Hr Flight</span>
                        </li>
                      </ul>
@@ -694,66 +720,66 @@ export default function App() {
 
           {/* HIGH-DENSITY FINANCIAL DASHBOARD */}
           {activeTab === 'financials' && (
-            <div className="animate-in fade-in duration-700 relative pt-2 flex flex-col gap-6">
+            <div className="animate-in fade-in duration-700 relative pt-2 flex flex-col gap-4 sm:gap-6">
               
               {/* HEADER & TOGGLE */}
-              <div className="flex justify-between items-center pb-2 relative z-10">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 sm:pb-2 relative z-10 gap-4 sm:gap-0">
                 <div>
-                  <h4 className="text-white font-bold text-[11px] tracking-[0.2em] uppercase flex items-center mb-1">
-                    <Calculator size={14} className="mr-2 text-blue-500" /> Financial Engine Control
+                  <h4 className="text-white font-bold text-[10px] sm:text-[11px] tracking-[0.2em] uppercase flex items-center mb-1">
+                    <Calculator size={12} className="mr-2 text-blue-500" /> Financial Engine Control
                   </h4>
-                  <p className="text-[11px] text-slate-400">Total Project GSF: <span className="text-white font-mono">{totalGsf.toLocaleString()}</span> | Capitalization: <span className="text-white font-mono">${(totalProjectCost / 1000000).toFixed(2)}M</span></p>
+                  <p className="text-[9px] sm:text-[11px] text-slate-400">Total Project GSF: <span className="text-white font-mono">{totalGsf.toLocaleString()}</span> <span className="hidden sm:inline">|</span><span className="sm:hidden block mt-0.5"></span> Capitalization: <span className="text-white font-mono">${(totalProjectCost / 1000000).toFixed(2)}M</span></p>
                 </div>
                 
-                <div className="flex bg-slate-900/80 rounded-full p-1 border border-slate-700 shadow-xl backdrop-blur-md">
+                <div className="flex w-full sm:w-auto bg-slate-900/80 rounded-full p-1 border border-slate-700 shadow-xl backdrop-blur-md">
                    <button 
                      onClick={handleResetToBaseline}
-                     className={`flex items-center px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${isBaseline ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
+                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${isBaseline ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
                    >
-                      <Lock size={12} className="mr-1.5"/> Source of Truth
+                      <Lock size={10} className="mr-1.5 sm:mr-1.5"/> Source of Truth
                    </button>
                    <button 
                      onClick={() => setIsBaseline(false)}
-                     className={`flex items-center px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${!isBaseline ? 'bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
+                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${!isBaseline ? 'bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
                    >
-                      <Sliders size={12} className="mr-1.5"/> Simulator
+                      <Sliders size={10} className="mr-1.5 sm:mr-1.5"/> Simulator
                    </button>
                 </div>
               </div>
 
-              {/* TOP ROW: KPI OUTPUT CARDS (5 Columns) */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/60 shadow-lg relative z-10">
-                <div className="border-r border-slate-800/50 pr-4">
-                  <p className="text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">Your LP Stake</p>
-                  <p className="text-2xl font-light text-white drop-shadow-lg">{(LPShareFraction * 100).toFixed(2)}<span className="text-sm text-slate-500 ml-1">%</span></p>
+              {/* TOP ROW: KPI OUTPUT CARDS (Responsive Grid) */}
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-6 gap-x-4 bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10">
+                <div className="border-r border-slate-800/50 pr-2 sm:pr-4">
+                  <p className="text-[8px] sm:text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">Your LP Stake</p>
+                  <p className="text-xl sm:text-2xl font-light text-white drop-shadow-lg">{(LPShareFraction * 100).toFixed(2)}<span className="text-xs sm:text-sm text-slate-500 ml-1">%</span></p>
                 </div>
-                <div className="border-r border-slate-800/50 pr-4 pl-2">
-                  <p className="text-[9px] text-blue-400 font-mono uppercase tracking-widest mb-1 font-bold">Yield Spread</p>
-                  <p className="text-2xl font-light text-blue-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">{developmentYieldSpread.toFixed(2)}<span className="text-sm text-blue-500/50 ml-1">%</span></p>
+                <div className="lg:border-r border-slate-800/50 pl-2 lg:pr-4">
+                  <p className="text-[8px] sm:text-[9px] text-blue-400 font-mono uppercase tracking-widest mb-1 font-bold">Yield Spread</p>
+                  <p className="text-xl sm:text-2xl font-light text-blue-300 drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">{developmentYieldSpread.toFixed(2)}<span className="text-xs sm:text-sm text-blue-500/50 ml-1">%</span></p>
                 </div>
-                <div className="border-r border-slate-800/50 pr-4 pl-2">
-                  <p className="text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">DSCR Covenant</p>
-                  <p className={`text-2xl font-light drop-shadow-lg ${isDSCRSafe ? 'text-emerald-400' : 'text-red-500'}`}>{dscr.toFixed(2)}<span className="text-sm text-slate-500 ml-1">x</span></p>
+                <div className="border-r border-slate-800/50 pr-2 sm:pr-4 lg:pl-2">
+                  <p className="text-[8px] sm:text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">DSCR Covenant</p>
+                  <p className={`text-xl sm:text-2xl font-light drop-shadow-lg ${isDSCRSafe ? 'text-emerald-400' : 'text-red-500'}`}>{dscr.toFixed(2)}<span className="text-xs sm:text-sm text-slate-500 ml-1">x</span></p>
                 </div>
-                <div className="border-r border-slate-800/50 pr-4 pl-2">
-                  <p className="text-[9px] text-emerald-400 font-mono uppercase tracking-widest mb-1 font-bold">Levered Cash Flow</p>
-                  <p className="text-2xl font-light text-emerald-300 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">${Math.round(userProjectedCashFlow).toLocaleString()}</p>
+                <div className="lg:border-r border-slate-800/50 pl-2 lg:pr-4">
+                  <p className="text-[8px] sm:text-[9px] text-emerald-400 font-mono uppercase tracking-widest mb-1 font-bold">Levered CF</p>
+                  <p className="text-xl sm:text-2xl font-light text-emerald-300 drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]">${Math.round(userProjectedCashFlow).toLocaleString()}</p>
                 </div>
-                <div className="pl-2">
-                  <p className="text-[9px] text-purple-400 font-mono uppercase tracking-widest mb-1 font-bold">Equity Multiple</p>
-                  <p className="text-2xl font-light text-purple-300 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">{equityMultiple.toFixed(2)}<span className="text-sm text-purple-500/50 ml-1">x</span></p>
+                <div className="col-span-2 lg:col-span-1 lg:pl-2 pt-4 lg:pt-0 border-t border-slate-800/50 lg:border-t-0 text-center lg:text-left">
+                  <p className="text-[8px] sm:text-[9px] text-purple-400 font-mono uppercase tracking-widest mb-1 font-bold">Equity Multiple</p>
+                  <p className="text-xl sm:text-2xl font-light text-purple-300 drop-shadow-[0_0_15px_rgba(168,85,247,0.3)]">{equityMultiple.toFixed(2)}<span className="text-xs sm:text-sm text-purple-500/50 ml-1">x</span></p>
                 </div>
               </div>
 
               {/* MIDDLE ROW: SLIDERS | STACK | WATERFALL */}
-              <div className="grid grid-cols-12 gap-6 relative z-10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative z-10">
                 
                 {/* Sliders (Utility Belt) */}
-                <div className="col-span-12 lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                  <p className={`text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center mb-4 ${isBaseline ? 'text-blue-400' : 'text-emerald-400'}`}>
+                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                  <p className={`text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center mb-4 sm:mb-6 ${isBaseline ? 'text-blue-400' : 'text-emerald-400'}`}>
                     <Sliders size={12} className="mr-2" /> Variables
                   </p>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 sm:gap-y-4">
                     <CustomSlider label="Keys" min={12} max={60} step={1} value={simulatedKeys} onChange={handleSliderChange(setSimulatedKeys)} format={(v) => v.toString()} isBaseline={isBaseline} />
                     <CustomSlider label="Rm Size" min={300} max={1500} step={50} value={simulatedRoomSqft} onChange={handleSliderChange(setSimulatedRoomSqft)} format={(v) => `${v} SF`} isBaseline={isBaseline} />
                     <CustomSlider label="Amenity SF" min={0} max={40000} step={1000} value={simulatedAmenitySqft} onChange={handleSliderChange(setSimulatedAmenitySqft)} format={(v) => `${(v/1000).toFixed(1)}k`} isBaseline={isBaseline} />
@@ -766,53 +792,53 @@ export default function App() {
                 </div>
 
                 {/* Capital Stack */}
-                <div className="col-span-12 lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                  <p className="text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
+                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
                     <Building size={12} className="mr-2 text-slate-500" /> Capital Stack
                   </p>
-                  <div className="h-2 w-full rounded-full flex overflow-hidden bg-transparent mb-5 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  <div className="h-2 w-full rounded-full flex overflow-hidden bg-transparent mb-5 sm:mb-6 shadow-[0_0_15px_rgba(0,0,0,0.5)]">
                       <div className="bg-cyan-400" style={{width: `${(debtAmount / totalProjectCost) * 100}%`}}></div>
                       <div className="bg-teal-400" style={{width: `${(lpEquityPool / totalProjectCost) * 100}%`}}></div>
                       <div className="bg-fuchsia-400" style={{width: `${(gpEquityPool / totalProjectCost) * 100}%`}}></div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="space-y-3">
-                          <p className="text-cyan-400 font-mono text-[9px] uppercase tracking-widest font-bold border-b border-slate-700/50 pb-1">Sources</p>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">Sr. Debt</span><span className="font-mono text-white font-bold">${(debtAmount / 1000000).toFixed(2)}M</span></div>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">LP Equity</span><span className="font-mono text-white font-bold">${(lpEquityPool / 1000000).toFixed(2)}M</span></div>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">Sponsor</span><span className="font-mono text-white font-bold">${(gpEquityPool / 1000000).toFixed(2)}M</span></div>
+                  <div className="grid grid-cols-2 gap-4 text-[10px] sm:text-xs">
+                      <div className="space-y-3 sm:space-y-4">
+                          <p className="text-cyan-400 font-mono text-[8px] sm:text-[9px] uppercase tracking-widest font-bold border-b border-slate-700/50 pb-1 sm:pb-2">Sources</p>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">Sr. Debt</span><span className="font-mono text-white font-bold">${(debtAmount / 1000000).toFixed(2)}M</span></div>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">LP Equity</span><span className="font-mono text-white font-bold">${(lpEquityPool / 1000000).toFixed(2)}M</span></div>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">Sponsor</span><span className="font-mono text-white font-bold">${(gpEquityPool / 1000000).toFixed(2)}M</span></div>
                       </div>
-                      <div className="space-y-3">
-                          <p className="text-slate-400 font-mono text-[9px] uppercase tracking-widest font-bold border-b border-slate-700/50 pb-1">Uses</p>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">Hard Costs</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.65 / 1000000).toFixed(2)}M</span></div>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">Soft/Arch</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.122 / 1000000).toFixed(2)}M</span></div>
-                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[10px]">FF&E / Pre</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.228 / 1000000).toFixed(2)}M</span></div>
+                      <div className="space-y-3 sm:space-y-4">
+                          <p className="text-slate-400 font-mono text-[8px] sm:text-[9px] uppercase tracking-widest font-bold border-b border-slate-700/50 pb-1 sm:pb-2">Uses</p>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">Hard Costs</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.65 / 1000000).toFixed(2)}M</span></div>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">Soft/Arch</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.122 / 1000000).toFixed(2)}M</span></div>
+                          <div className="flex justify-between items-center"><span className="text-slate-400 text-[9px] sm:text-[10px]">FF&E / Pre</span><span className="font-mono text-white font-bold">${(totalProjectCost * 0.228 / 1000000).toFixed(2)}M</span></div>
                       </div>
                   </div>
                 </div>
 
                 {/* Revenue Waterfall */}
-                <div className="col-span-12 lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                  <p className="text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
+                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
                     <TrendingUp size={12} className="mr-2 text-slate-500" /> Revenue Waterfall
                   </p>
-                  <div className="w-full flex gap-1.5 h-2 items-center mb-5">
+                  <div className="w-full flex gap-1.5 h-2 items-center mb-5 sm:mb-6">
                       <div className="bg-red-500 h-full rounded-full" style={{width: `${deptPercent}%`}}></div>
                       <div className="bg-orange-500 h-full rounded-full" style={{width: `${fixedPercent}%`}}></div>
                       <div className="bg-emerald-400 h-full rounded-full" style={{width: `${noiPercent}%`}}></div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4">
                     <div>
-                      <span className="block text-blue-400/80 text-[9px] uppercase font-mono font-bold mb-1 border-b border-slate-700/50 pb-1">Gross Rev</span>
-                      <span className="text-white font-light text-xl">${(totalSimulatedRevenue / 1000000).toFixed(2)}<span className="text-[10px] text-slate-500">M</span></span>
+                      <span className="block text-blue-400/80 text-[8px] sm:text-[9px] uppercase font-mono font-bold mb-1 sm:mb-2 border-b border-slate-700/50 pb-1 sm:pb-2">Gross Rev</span>
+                      <span className="text-white font-light text-lg sm:text-xl">${(totalSimulatedRevenue / 1000000).toFixed(2)}<span className="text-[9px] sm:text-[10px] text-slate-500 ml-0.5">M</span></span>
                     </div>
-                    <div className="border-l border-slate-800/80 pl-4">
-                      <span className="block text-red-400/80 text-[9px] uppercase font-mono font-bold mb-1 border-b border-slate-700/50 pb-1">Total Exp</span>
-                      <span className="text-white font-light text-xl">${(totalOpEx / 1000000).toFixed(2)}<span className="text-[10px] text-slate-500">M</span></span>
+                    <div className="border-l border-slate-800/80 pl-2 sm:pl-4">
+                      <span className="block text-red-400/80 text-[8px] sm:text-[9px] uppercase font-mono font-bold mb-1 sm:mb-2 border-b border-slate-700/50 pb-1 sm:pb-2">Total Exp</span>
+                      <span className="text-white font-light text-lg sm:text-xl">${(totalOpEx / 1000000).toFixed(2)}<span className="text-[9px] sm:text-[10px] text-slate-500 ml-0.5">M</span></span>
                     </div>
-                    <div className="border-l border-slate-800/80 pl-4">
-                      <span className="block text-emerald-400 text-[9px] uppercase font-mono font-bold mb-1 border-b border-slate-700/50 pb-1">Net Income</span>
-                      <span className="text-white font-light text-xl drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">${(simulatedNOI / 1000000).toFixed(2)}<span className="text-[10px] text-emerald-500/50">M</span></span>
+                    <div className="border-l border-slate-800/80 pl-2 sm:pl-4">
+                      <span className="block text-emerald-400 text-[8px] sm:text-[9px] uppercase font-mono font-bold mb-1 sm:mb-2 border-b border-slate-700/50 pb-1 sm:pb-2">Net Income</span>
+                      <span className="text-white font-light text-lg sm:text-xl drop-shadow-[0_0_10px_rgba(16,185,129,0.4)]">${(simulatedNOI / 1000000).toFixed(2)}<span className="text-[9px] sm:text-[10px] text-emerald-500/50 ml-0.5">M</span></span>
                     </div>
                   </div>
                 </div>
@@ -820,67 +846,67 @@ export default function App() {
               </div>
 
               {/* BOTTOM ROW: Detailed 5-Year Table */}
-              <div className="bg-slate-900/40 p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 w-full overflow-x-auto">
-                <div className="flex justify-between items-end mb-4">
-                  <h4 className="text-white font-light text-xl tracking-tight">
+              <div className="bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 w-full overflow-x-auto hide-scrollbar">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2 sm:gap-0">
+                  <h4 className="text-white font-light text-lg sm:text-xl tracking-tight">
                     {isBaseline ? 'Verified Columbia Pro Forma Snapshot' : 'Dynamic Operating Projection'}
                   </h4>
                   {!isBaseline && (
-                     <span className="hidden md:inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[9px] uppercase tracking-widest font-bold rounded-full">
+                     <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[8px] sm:text-[9px] uppercase tracking-widest font-bold rounded-full">
                         Live Simulation Active
                      </span>
                   )}
                 </div>
                 
-                <table className="w-full text-left border-collapse min-w-[800px]">
+                <table className="w-full text-left border-collapse min-w-[700px] sm:min-w-[800px]">
                   <thead>
-                    <tr className="text-slate-400 uppercase tracking-widest font-bold font-mono text-[9px] border-b border-slate-800/80">
-                      <th className="py-2 px-4">Operating Metric</th>
-                      <th className="py-2 px-4 text-right">Year 1</th>
-                      <th className="py-2 px-4 text-right">Year 2</th>
-                      <th className={`py-2 px-4 text-right font-bold border-b-2 relative ${isBaseline ? 'text-blue-400 border-blue-500' : 'text-emerald-400 border-emerald-500'}`}>
+                    <tr className="text-slate-400 uppercase tracking-widest font-bold font-mono text-[8px] sm:text-[9px] border-b border-slate-800/80">
+                      <th className="py-2 sm:py-3 px-3 sm:px-4">Operating Metric</th>
+                      <th className="py-2 sm:py-3 px-3 sm:px-4 text-right">Year 1</th>
+                      <th className="py-2 sm:py-3 px-3 sm:px-4 text-right">Year 2</th>
+                      <th className={`py-2 sm:py-3 px-3 sm:px-4 text-right font-bold border-b-2 relative ${isBaseline ? 'text-blue-400 border-blue-500' : 'text-emerald-400 border-emerald-500'}`}>
                           Year 3 (Stab)
                       </th>
-                      <th className="py-2 px-4 text-right">Year 4</th>
-                      <th className="py-2 px-4 text-right">Year 5</th>
+                      <th className="py-2 sm:py-3 px-3 sm:px-4 text-right">Year 4</th>
+                      <th className="py-2 sm:py-3 px-3 sm:px-4 text-right">Year 5</th>
                     </tr>
                   </thead>
-                  <tbody className="text-slate-300 text-[11px]">
+                  <tbody className="text-slate-300 text-[10px] sm:text-[11px]">
                     <tr className="border-b border-slate-800/40 hover:bg-slate-800/40">
-                      <td className="py-2 px-4">Underwritten Occupancy</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>{d.occ.toFixed(1)}%</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4">Underwritten Occupancy</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>{d.occ.toFixed(1)}%</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/40 hover:bg-slate-800/40">
-                      <td className="py-2 px-4">Average Daily Rate (ADR)</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>${Math.round(d.adr).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4">Average Daily Rate (ADR)</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>${Math.round(d.adr).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/80 hover:bg-slate-800/40 font-bold bg-slate-800/20">
-                      <td className="py-2 px-4 text-white">Total Gross Revenues</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10') : 'text-white'}`}>${Math.round(d.rev).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-white">Total Gross Revenues</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-400 bg-blue-500/10' : 'text-emerald-400 bg-emerald-500/10') : 'text-white'}`}>${Math.round(d.rev).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/40 hover:bg-slate-800/40">
-                      <td className="py-2 px-4 text-slate-400 pl-8">Less: Departmental & Undistributed Exp</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.deptExp).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-400 pl-6 sm:pl-8">Less: Departmental & Undistributed Exp</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.deptExp).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/80 hover:bg-slate-800/40 font-bold bg-slate-800/20">
-                      <td className="py-2 px-4 text-slate-200">Gross Operating Profit (GOP)</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/10' : 'text-emerald-300 bg-emerald-500/10') : 'text-slate-200'}`}>${Math.round(d.gop).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-200">Gross Operating Profit (GOP)</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/10' : 'text-emerald-300 bg-emerald-500/10') : 'text-slate-200'}`}>${Math.round(d.gop).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/40 hover:bg-slate-800/40">
-                      <td className="py-2 px-4 text-slate-400 pl-8">Less: Fixed Exp (Taxes, Ins, Mgmt)</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.fixedExp).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-400 pl-6 sm:pl-8">Less: Fixed Exp (Taxes, Ins, Mgmt)</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.fixedExp).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/80 hover:bg-slate-800/40 font-bold text-white bg-slate-800/40">
-                      <td className="py-2.5 px-4 text-[12px]">Net Operating Income (NOI)</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2.5 px-4 text-right font-mono text-[12px] ${d.year === 3 ? (isBaseline ? 'text-blue-400 bg-blue-500/20 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'text-emerald-400 bg-emerald-500/20 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]') : 'text-white'}`}>${Math.round(d.noi).toLocaleString()}</td>)}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-[11px] sm:text-[12px]">Net Operating Income (NOI)</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono text-[11px] sm:text-[12px] ${d.year === 3 ? (isBaseline ? 'text-blue-400 bg-blue-500/20 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]' : 'text-emerald-400 bg-emerald-500/20 drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]') : 'text-white'}`}>${Math.round(d.noi).toLocaleString()}</td>)}
                     </tr>
                     <tr className="border-b border-slate-800/40 hover:bg-slate-800/40">
-                      <td className="py-2 px-4 text-slate-400 pl-8">Less: CapEx Reserve</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.reserve).toLocaleString()}</td>)}
+                      <td className="py-2 sm:py-2.5 px-3 sm:px-4 text-slate-400 pl-6 sm:pl-8">Less: CapEx Reserve</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2 sm:py-2.5 px-3 sm:px-4 text-right font-mono text-slate-400 ${d.year === 3 ? (isBaseline ? 'bg-blue-500/5' : 'bg-emerald-500/5') : ''}`}>${Math.round(d.reserve).toLocaleString()}</td>)}
                     </tr>
                     <tr className="hover:bg-slate-800/40 font-bold text-emerald-400">
-                      <td className="py-2 px-4 flex items-center"><Leaf size={12} className="mr-2 opacity-60"/> NOI After Reserve</td>
-                      {tableData.map(d => <td key={d.year} className={`py-2 px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>${Math.round(d.noiAfter).toLocaleString()}</td>)}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 flex items-center"><Leaf size={12} className="mr-2 opacity-60"/> NOI After Reserve</td>
+                      {tableData.map(d => <td key={d.year} className={`py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono ${d.year === 3 ? (isBaseline ? 'text-blue-300 bg-blue-500/5' : 'text-emerald-300 bg-emerald-500/5') : ''}`}>${Math.round(d.noiAfter).toLocaleString()}</td>)}
                     </tr>
                   </tbody>
                 </table>
@@ -890,70 +916,70 @@ export default function App() {
 
           {/* Sponsorship Team Tab */}
           {activeTab === 'team' && (
-            <div className="space-y-20 animate-in fade-in duration-700">
-              <div className="grid lg:grid-cols-3 gap-10">
+            <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
                 
                 {/* Walker Profile */}
-                <div className="relative group p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
-                  <div className="w-16 h-16 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 border border-blue-500/20">
-                      <Users className="text-blue-400" size={28} />
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-blue-500/20">
+                      <Users className="text-blue-400 sm:w-7 sm:h-7" size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">Walker Templeton</h3>
-                  <p className="text-blue-400 text-[10px] font-mono uppercase tracking-[0.2em] mt-2 mb-6 font-bold">Lead Developer / Sponsor</p>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Walker Templeton</h3>
+                  <p className="text-blue-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1 sm:mt-2 mb-4 sm:mb-6 font-bold">Lead Developer / Sponsor</p>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
                     Designer and Entrepreneur building sustainable business ventures. Over 25 years of experience working with global companies (Nike, Google), college athletics, hospitality, and designing world-class commercial/residential buildings.
                   </p>
                 </div>
 
                 {/* Robert Gutierrez Profile */}
-                <div className="relative group p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
-                  <div className="w-16 h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 border border-emerald-500/20">
-                      <Briefcase className="text-emerald-400" size={28} />
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-emerald-500/20">
+                      <Briefcase className="text-emerald-400 sm:w-7 sm:h-7" size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">Robert Gutierrez</h3>
-                  <p className="text-emerald-400 text-[10px] font-mono uppercase tracking-[0.2em] mt-2 mb-6 font-bold">Capital Markets</p>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Robert Gutierrez</h3>
+                  <p className="text-emerald-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1 sm:mt-2 mb-4 sm:mb-6 font-bold">Capital Markets</p>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
                     Specializing in structured finance and institutional equity syndication for premium real estate assets. Bringing extensive relationships across private equity, family offices, and high-net-worth investor networks.
                   </p>
                 </div>
 
                 {/* Placeholder / Ops Profile */}
-                <div className="relative group p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
-                  <div className="w-16 h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 border border-purple-500/20">
-                      <Layers className="text-purple-400" size={28} />
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 md:col-span-2 lg:col-span-1">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-purple-500/20">
+                      <Layers className="text-purple-400 sm:w-7 sm:h-7" size={24} />
                   </div>
-                  <h3 className="text-2xl font-bold text-white tracking-tight">To Be Announced</h3>
-                  <p className="text-purple-400 text-[10px] font-mono uppercase tracking-[0.2em] mt-2 mb-6 font-bold">Director of Operations</p>
-                  <p className="text-slate-300 text-sm leading-relaxed mb-6">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">To Be Announced</h3>
+                  <p className="text-purple-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1 sm:mt-2 mb-4 sm:mb-6 font-bold">Director of Operations</p>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-4 sm:mb-6">
                     Executive oversight parameter placeholder for pre-opening hiring phase. Will act as the direct liaison between ownership and the Columbia Hospitality management team.
                   </p>
                 </div>
 
               </div>
 
-              <GoldBeamX className="my-16" />
+              <GoldBeamX className="my-10 lg:my-16" />
 
-              <div className="grid lg:grid-cols-2 gap-20">
-                <div className="relative group lg:pr-10 border-r border-slate-800/50">
-                  <div className="flex items-center space-x-6 mb-8">
-                    <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-center">
-                      <Building className="text-emerald-400" size={28} />
+              <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
+                <div className="relative group lg:pr-10 border-b lg:border-b-0 lg:border-r border-slate-800/50 pb-12 lg:pb-0">
+                  <div className="flex items-center space-x-4 sm:space-x-6 mb-6 sm:mb-8">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0">
+                      <Building className="text-emerald-400 sm:w-7 sm:h-7" size={24} />
                     </div>
                     <div>
-                      <h3 className="text-3xl font-bold text-white tracking-tight">Columbia Hospitality</h3>
-                      <p className="text-emerald-400 text-[10px] font-mono uppercase tracking-widest mt-2 font-bold">Management Partner</p>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Columbia Hospitality</h3>
+                      <p className="text-emerald-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-widest mt-1 sm:mt-2 font-bold">Management Partner</p>
                     </div>
                   </div>
-                  <p className="text-slate-300 text-base leading-relaxed">
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
                     Universally acknowledged as the premier high-end boutique hospitality operator in the Pacific Northwest. Handled complete pro forma modeling and staffing parameters to ensure flawless operations across all three structures.
                   </p>
                 </div>
 
                 <div className="relative">
-                  <h4 className="text-white font-bold text-2xl flex items-center relative z-10 tracking-tight mb-6">
+                  <h4 className="text-white font-bold text-xl sm:text-2xl flex items-center relative z-10 tracking-tight mb-4 sm:mb-6">
                     Target Luxury Brand: LHW
                   </h4>
-                  <p className="text-slate-300 text-base leading-relaxed relative z-10">
+                  <p className="text-slate-300 text-sm sm:text-base leading-relaxed relative z-10">
                     Sponsorship is in active negotiations to align 1816 Maxwell with the infrastructure of <strong className="text-white">Leading Hotels of the World (LHW)</strong>. This partnership will officially add the property to LHW's exclusive global portfolio, securing instant access to 4.5 million highly affluent Leaders Club members and maximizing the baseline $1,038 ADR model through elite direct-booking advantages.
                   </p>
                 </div>
@@ -964,20 +990,20 @@ export default function App() {
         </main>
         
         {/* Institutional Call-to-Action Footer */}
-        <footer className="bg-[#030408] border-t border-slate-800/60 py-32 relative overflow-hidden">
+        <footer className="bg-[#030408] border-t border-slate-800/60 py-20 sm:py-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none"></div>
-          <div className="max-w-[100rem] mx-auto px-6 text-center relative z-10">
-            <h2 className="text-4xl font-light text-white mb-8 tracking-tight">Ready to review the full package?</h2>
-            <p className="text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed text-lg">
+          <div className="max-w-[100rem] mx-auto px-4 sm:px-6 text-center relative z-10">
+            <h2 className="text-3xl sm:text-4xl font-light text-white mb-6 sm:mb-8 tracking-tight">Ready to review the full package?</h2>
+            <p className="text-slate-400 max-w-3xl mx-auto mb-8 sm:mb-12 leading-relaxed text-sm sm:text-lg">
               Access the complete data room including the $500k due diligence package (civil, geo-technical, traffic, environmental), full Columbia Hospitality pro forma, and Mighty Buildings schematic architecture.
             </p>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[11px] uppercase tracking-widest hover:from-blue-500 hover:to-indigo-500 transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] hover:-translate-y-1"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] sm:text-[11px] uppercase tracking-widest hover:from-blue-500 hover:to-indigo-500 transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] hover:-translate-y-1"
             >
-              <Download size={18} className="mr-3" /> Secure Institutional Access
+              <Download size={18} className="mr-2 sm:mr-3" /> Secure Institutional Access
             </button>
-            <div className="mt-24 text-slate-600 text-[10px] font-mono font-bold tracking-widest uppercase">
+            <div className="mt-16 sm:mt-24 text-slate-600 text-[8px] sm:text-[10px] font-mono font-bold tracking-widest uppercase px-4">
               © 2026 Drive Equity Partners. All rights reserved. Confidential Offering Memorandum.
             </div>
           </div>
@@ -985,56 +1011,58 @@ export default function App() {
       </>
       )}
 
-      {/* Secure Contact Modal */}
+      {/* Secure Contact Modal (Responsive fixes) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
           <div className="absolute inset-0 bg-[#050810]/95 backdrop-blur-xl" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative w-full max-w-lg bg-[#0b101f] border border-slate-800/80 rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <div className="flex justify-between items-center p-8 border-b border-slate-800/60">
+          <div className="relative w-full max-w-lg bg-[#0b101f] border border-slate-800/80 rounded-2xl sm:rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+            <div className="flex justify-between items-start sm:items-center p-6 sm:p-8 border-b border-slate-800/60 gap-4">
               <div>
-                <h3 className="text-xl font-bold text-white flex items-center tracking-tight">
-                  <ShieldCheck className="text-emerald-400 mr-3" size={24} /> Secure Data Room Access
+                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center tracking-tight">
+                  <ShieldCheck className="text-emerald-400 mr-2 sm:mr-3 shrink-0" size={20} /> Secure Data Room Access
                 </h3>
-                <p className="text-sm text-slate-400 mt-2">Contact the sponsorship team to request the password.</p>
+                <p className="text-xs sm:text-sm text-slate-400 mt-2">Contact the sponsorship team to request the password.</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors">
-                <X size={24} />
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors p-1 sm:p-0">
+                <X size={20} className="sm:w-6 sm:h-6" />
               </button>
             </div>
             
-            <div className="p-8 space-y-6">
-              <div className="bg-transparent border border-slate-700/50 p-5 rounded-2xl flex justify-between items-center group hover:bg-slate-900/40 transition-colors shadow-lg">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-5 border border-blue-500/20">
-                    <Users className="text-blue-400" size={20} />
+            <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
+              <div className="bg-transparent border border-slate-700/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center group hover:bg-slate-900/40 transition-colors shadow-lg gap-4 sm:gap-0">
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-4 sm:mr-5 border border-blue-500/20 shrink-0">
+                    <Users className="text-blue-400 sm:w-5 sm:h-5" size={18} />
                   </div>
                   <div>
-                    <p className="text-white font-bold text-base">Walker Templeton</p>
-                    <p className="text-slate-400 text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Sponsor / Developer</p>
+                    <p className="text-white font-bold text-sm sm:text-base">Walker Templeton</p>
+                    <p className="text-slate-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Sponsor / Developer</p>
                   </div>
                 </div>
-                <button onClick={() => handleCopy('walktempleton@gmail.com')} className="p-3 rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
-                  {copiedEmail === 'walktempleton@gmail.com' ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                <button onClick={() => handleCopy('walktempleton@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
+                  {copiedEmail === 'walktempleton@gmail.com' ? <Check size={16} className="text-emerald-400 sm:w-[18px] sm:h-[18px]" /> : <Copy size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                  <span className="sm:hidden ml-2 text-xs font-bold">COPY EMAIL</span>
                 </button>
               </div>
 
-              <div className="bg-transparent border border-slate-700/50 p-5 rounded-2xl flex justify-between items-center group hover:bg-slate-900/40 transition-colors shadow-lg">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-5 border border-blue-500/20">
-                    <Briefcase className="text-blue-400" size={20} />
+              <div className="bg-transparent border border-slate-700/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center group hover:bg-slate-900/40 transition-colors shadow-lg gap-4 sm:gap-0">
+                <div className="flex items-center w-full sm:w-auto">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-4 sm:mr-5 border border-blue-500/20 shrink-0">
+                    <Briefcase className="text-blue-400 sm:w-5 sm:h-5" size={18} />
                   </div>
                   <div>
-                    <p className="text-white font-bold text-base">Robert Gutierrez</p>
-                    <p className="text-slate-400 text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Capital Markets</p>
+                    <p className="text-white font-bold text-sm sm:text-base">Robert Gutierrez</p>
+                    <p className="text-slate-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Capital Markets</p>
                   </div>
                 </div>
-                <button onClick={() => handleCopy('rjg.cal@gmail.com')} className="p-3 rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
-                  {copiedEmail === 'rjg.cal@gmail.com' ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                <button onClick={() => handleCopy('rjg.cal@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
+                  {copiedEmail === 'rjg.cal@gmail.com' ? <Check size={16} className="text-emerald-400 sm:w-[18px] sm:h-[18px]" /> : <Copy size={16} className="sm:w-[18px] sm:h-[18px]" />}
+                  <span className="sm:hidden ml-2 text-xs font-bold">COPY EMAIL</span>
                 </button>
               </div>
 
-              <a href="mailto:walktempleton@gmail.com,rjg.cal@gmail.com?subject=1816%20Maxwell%20-%20Secure%20Institutional%20Access%20Request" className="w-full flex items-center justify-center py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] mt-4">
-                <Mail size={18} className="mr-3" /> Open Default Email Client
+              <a href="mailto:walktempleton@gmail.com,rjg.cal@gmail.com?subject=1816%20Maxwell%20-%20Secure%20Institutional%20Access%20Request" className="w-full flex items-center justify-center py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg sm:rounded-xl font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] mt-4">
+                <Mail size={16} className="mr-2 sm:mr-3 sm:w-[18px] sm:h-[18px]" /> Open Default Email
               </a>
             </div>
           </div>
