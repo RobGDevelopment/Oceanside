@@ -8,11 +8,11 @@ import {
 const DigitalFlipbook = () => {
   const [flippedCount, setFlippedCount] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<{role: string, text: string}[]>([
     { role: 'model', text: 'Welcome to the 1816 Maxwell Data Room. I am the AI Investment Analyst. How can I assist you with the pro forma, market fundamentals, or architectural details?' }
   ]);
   const [userInput, setUserInput] = useState('');
@@ -25,7 +25,7 @@ const DigitalFlipbook = () => {
   }, []);
 
   // --- Navigation Handlers ---
-  const handlePageClick = (index) => {
+  const handlePageClick = (index: number) => {
     if (index === flippedCount) {
       setFlippedCount(prev => Math.min(prev + 1, totalSheets));
     } else if (index === flippedCount - 1) {
@@ -38,11 +38,11 @@ const DigitalFlipbook = () => {
 
   // --- Mobile Swipe Handlers ---
   const minSwipeDistance = 40;
-  const onTouchStart = (e) => {
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
     setTouchEnd(null);
     setTouchStart(e.targetTouches[0].clientX);
   };
-  const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => setTouchEnd(e.targetTouches[0].clientX);
   const onTouchEndHandler = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
@@ -50,7 +50,7 @@ const DigitalFlipbook = () => {
     if (distance < -minSwipeDistance) turnPrev(); // Swipe Right
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!userInput.trim() || isAILoading) return;
 
