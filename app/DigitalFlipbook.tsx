@@ -8,7 +8,7 @@ const DigitalFlipbook = () => {
   // When flippedCount is 0, the book is considered "closed"
   const isClosed = flippedCount === 0;
 
-  const handlePageClick = (index) => {
+  const handlePageClick = (index: number) => {
     if (index === flippedCount) {
       setFlippedCount(prev => Math.min(prev + 1, totalSheets));
     } else if (index === flippedCount - 1) {
