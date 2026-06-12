@@ -320,7 +320,6 @@ export default function App() {
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId as any);
-    // Exclude 'deck' and '3dmodel' from auto-scrolling so they stay full-screen
     if (tabId !== 'deck' && tabId !== '3dmodel') {
       setTimeout(() => {
         const element = document.getElementById('main-content');
@@ -366,7 +365,6 @@ export default function App() {
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       `}</style>
 
-      {/* Conditional Rendering for Full-Screen Flipbook */}
       {activeTab === 'deck' ? (
         <DigitalFlipbook />
       ) : (
@@ -423,15 +421,13 @@ export default function App() {
           </div>
         </nav>
 
-        {/* Conditional Rendering for 3D Viewer vs Standard Page */}
+        {}
         {activeTab === '3dmodel' ? (
-           <div className="w-full h-screen relative">
-              {/* ArchitectureViewer loads underneath the transparent nav bar */}
-              <ArchitectureViewer />
-           </div>
+          <div className="w-full h-screen relative pt-20">
+            <ArchitectureViewer />
+          </div>
         ) : (
         <>
-          {}
           {/* Hero Animated Sliding Panels */}
           <div className="relative min-h-[85vh] lg:min-h-[90vh] flex items-center justify-center pt-28 lg:pt-20 overflow-hidden">
             <div className="absolute inset-0 z-0">
@@ -738,7 +734,6 @@ export default function App() {
               </div>
             )}
 
-            {/* HIGH-DENSITY FINANCIAL DASHBOARD */}
             {}
             {activeTab === 'financials' && (
               <div className="animate-in fade-in duration-700 relative pt-2 flex flex-col gap-4 sm:gap-6">
@@ -768,7 +763,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* TOP ROW: KPI OUTPUT CARDS (Responsive Grid) */}
+                {/* TOP ROW: KPI OUTPUT CARDS */}
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-6 gap-x-4 bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 select-none">
                   <div className="border-r border-slate-800/50 pr-2 sm:pr-4">
                     <p className="text-[8px] sm:text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">Your LP Stake</p>
@@ -935,7 +930,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Sponsorship Team Tab */}
+            {}
             {activeTab === 'team' && (
               <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
