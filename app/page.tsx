@@ -369,6 +369,7 @@ export default function App() {
         <DigitalFlipbook />
       ) : (
       <>
+        {}
         {/* Premium Header Navigation (Mobile App Optimized) */}
         <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl pt-safe select-none">
           <div className="max-w-[100rem] mx-auto px-4 md:px-6 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 py-2 lg:py-0">
@@ -421,7 +422,6 @@ export default function App() {
           </div>
         </nav>
 
-        {}
         {activeTab === '3dmodel' ? (
           <div className="w-full h-screen relative pt-20">
             <ArchitectureViewer />
@@ -930,7 +930,7 @@ export default function App() {
               </div>
             )}
 
-            {}
+            {/* Sponsorship Team Tab */}
             {activeTab === 'team' && (
               <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
