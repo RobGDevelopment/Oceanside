@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   ChevronLeft, ChevronRight, Lock, MapPin, Building2, 
   ShieldCheck, Presentation, Leaf, TrendingUp, BedDouble, 
@@ -11,7 +11,13 @@ interface Message {
 }
 
 const DigitalFlipbook: React.FC = () => {
+  // Desktop 3D Flipbook State
   const [flippedCount, setFlippedCount] = useState<number>(0);
+  
+  // Mobile App View State
+  const [mobilePageIndex, setMobilePageIndex] = useState<number>(0);
+  const mobileScrollContainerRef = useRef<HTMLDivElement>(null);
+
   const [mounted, setMounted] = useState<boolean>(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
@@ -29,6 +35,7 @@ const DigitalFlipbook: React.FC = () => {
     setMounted(true);
   }, []);
 
+  // --- Desktop Navigation Handlers ---
   const handlePageClick = (index: number) => {
     if (index === flippedCount) {
       setFlippedCount(prev => Math.min(prev + 1, totalSheets));
@@ -40,6 +47,7 @@ const DigitalFlipbook: React.FC = () => {
   const turnNext = () => setFlippedCount(prev => Math.min(prev + 1, totalSheets));
   const turnPrev = () => setFlippedCount(prev => Math.max(prev - 1, 0));
 
+  // --- Desktop Swipe Handlers ---
   const minSwipeDistance = 40;
   
   const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
@@ -54,10 +62,28 @@ const DigitalFlipbook: React.FC = () => {
   const onTouchEndHandler = () => {
     if (!touchStart || !touchEnd) return;
     const distance = touchStart - touchEnd;
-    if (distance > minSwipeDistance) turnNext(); // Swipe Left
-    if (distance < -minSwipeDistance) turnPrev(); // Swipe Right
+    if (distance > minSwipeDistance) turnNext(); 
+    if (distance < -minSwipeDistance) turnPrev(); 
   };
 
+  // --- Mobile Swipe & Scroll Handlers ---
+  const handleMobileScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollLeft = e.currentTarget.scrollLeft;
+    const width = e.currentTarget.clientWidth;
+    const newIndex = Math.round(scrollLeft / width);
+    if (newIndex !== mobilePageIndex) {
+      setMobilePageIndex(newIndex);
+    }
+  };
+
+  const scrollMobileTo = (index: number) => {
+    if (!mobileScrollContainerRef.current) return;
+    const width = mobileScrollContainerRef.current.clientWidth;
+    mobileScrollContainerRef.current.scrollTo({ left: width * index, behavior: 'smooth' });
+    setMobilePageIndex(index);
+  };
+
+  // --- AI Analyst Handler ---
   const handleSendMessage = async (e?: React.FormEvent<HTMLFormElement>) => {
     e?.preventDefault();
     if (!userInput.trim() || isAILoading) return;
@@ -126,7 +152,6 @@ const DigitalFlipbook: React.FC = () => {
       // Sheet 0: Cover / Table of Contents
       front: (
         <div className="w-full h-full relative flex flex-col items-center justify-center text-center shadow-[inset_40px_0_80px_rgba(0,0,0,0.9)] overflow-hidden bg-[#050810]">
-          {/* Changed cover image to object-cover to act as full-bleed background without distortion */}
           <img src="/Images/page10-sunset-render.jpg" alt="Cover" className="absolute inset-0 w-full h-full object-cover scale-[1.02]" />
           <div className="absolute inset-0 bg-[#02050a]/70 mix-blend-multiply"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#02050a] via-[#02050a]/60 to-transparent"></div>
@@ -159,7 +184,7 @@ const DigitalFlipbook: React.FC = () => {
               { num: 'VII.', title: 'Pro Forma Economics', page: '15' },
               { num: 'VIII.', title: 'Target Returns & Capital', page: '17' },
             ].map((item, i) => (
-              <div key={`toc-${i}`} className="flex items-end w-full group cursor-default">
+              <div key={`toc-item-${i}`} className="flex items-end w-full group cursor-default">
                 <span className="text-[#a0a0a0] w-6 md:w-8">{item.num}</span>
                 <span className="text-[#111] tracking-[0.1em] md:tracking-[0.2em]">{item.title}</span>
                 <div className="flex-1 border-b border-dotted border-[#a0a0a0] mx-2 md:mx-4 opacity-30"></div>
@@ -206,9 +231,9 @@ const DigitalFlipbook: React.FC = () => {
       ),
       back: (
         <div className="w-full h-full bg-[#02050a] shadow-[inset_-30px_0_80px_rgba(0,0,0,0.8)] relative p-0 overflow-hidden">
-          {/* Changed aerial image to object-cover */}
           <img src="/Images/OCEANSIDE%20-%20AERIAL%20VIEW.jpg" alt="Aerial View" className="w-full h-full object-cover opacity-80" />
-          <div className="absolute bottom-6 left-6 md:bottom-12 md:left-12 bg-white/10 backdrop-blur-md border border-white/20 p-4 md:p-6 max-w-[80%] md:max-w-sm">
+          <div className="absolute inset-0 bg-[#02050a]/30 mix-blend-multiply"></div>
+          <div className="absolute bottom-6 left-6 md:bottom-12 md:left-12 bg-white/10 backdrop-blur-md border border-white/20 p-4 md:p-6 max-w-[80%] md:max-w-sm z-10">
             <h4 className="font-serif text-white text-[12px] md:text-[16px] mb-1 md:mb-2">Irreplaceable Coastal Promontory</h4>
             <p className="font-mono text-[6px] md:text-[9px] text-[#d4d0c5] tracking-widest uppercase leading-loose">
               Grandfathered zoning securing unobstructed Pacific sightlines.
@@ -241,7 +266,8 @@ const DigitalFlipbook: React.FC = () => {
       back: (
         <div className="w-full h-full bg-[#111] shadow-[inset_-30px_0_80px_rgba(0,0,0,0.7)] relative p-0 overflow-hidden">
           <img src="/Images/page31-mighty-buildings.jpg.png" alt="Mighty Buildings" className="w-full h-full object-cover grayscale-[40%]" />
-          <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/90 backdrop-blur px-4 py-2 md:px-8 md:py-4 shadow-xl">
+          <div className="absolute inset-0 bg-[#111]/40 mix-blend-multiply"></div>
+          <div className="absolute bottom-6 right-6 md:bottom-10 md:right-10 bg-white/90 backdrop-blur px-4 py-2 md:px-8 md:py-4 shadow-xl z-10">
              <span className="font-mono text-[6px] md:text-[9px] uppercase tracking-[0.2em] md:tracking-[0.3em] text-[#1a1a1a]">Proprietary Panel System</span>
           </div>
         </div>
@@ -370,8 +396,7 @@ const DigitalFlipbook: React.FC = () => {
         <div className="w-full h-full bg-[#f2f0e9] shadow-[inset_30px_0_60px_rgba(0,0,0,0.06)] p-6 md:p-16 flex flex-col relative border-r border-[#d4d0c5]">
           <h2 className="font-serif text-[16px] md:text-[24px] mb-6 md:mb-10 tracking-[0.1em] text-center border-b border-[#111] pb-4">Site Architecture</h2>
           <div className="flex-1 bg-white p-2 md:p-6 shadow-sm border border-[#e2dfd5] flex items-center justify-center overflow-hidden">
-            {/* Added object-contain to structural drawings to prevent vertical stretching */}
-            <img src="/Images/page5-site-plan.jpg" alt="Master Plan" className="w-full h-full object-contain mix-blend-multiply" />
+            <img src="/Images/page5-site-plan.jpg" alt="Master Plan" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
           </div>
         </div>
       ),
@@ -408,8 +433,7 @@ const DigitalFlipbook: React.FC = () => {
           <h2 className="font-serif text-[12px] md:text-[16px] mb-6 md:mb-12 tracking-[0.2em] md:tracking-[0.4em] text-[#4a4a4a] uppercase text-center border-b border-[#e2dfd5] pb-4 md:pb-8">Building One Layout</h2>
           <div className="flex-1 bg-white border border-[#e2dfd5] p-4 md:p-10 flex flex-col justify-center relative shadow-sm overflow-hidden">
             <span className="absolute top-4 left-4 md:top-8 md:left-8 text-[6px] md:text-[9px] font-serif uppercase tracking-[0.3em] text-[#a0a0a0] z-10">First Floor</span>
-            {/* Added object-contain */}
-            <img src="/Images/Building%20One%20First%20Floor.png" alt="Building 1 First Floor" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
+            <img src="/Images/Building_One_First_Floor.png" alt="Building 1 First Floor" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
           </div>
         </div>
       ),
@@ -418,8 +442,7 @@ const DigitalFlipbook: React.FC = () => {
           <h2 className="font-serif text-[12px] md:text-[16px] mb-6 md:mb-12 tracking-[0.2em] md:tracking-[0.4em] text-[#4a4a4a] uppercase text-center border-b border-[#e2dfd5] pb-4 md:pb-8">Building Three Layout</h2>
           <div className="flex-1 bg-white border border-[#e2dfd5] p-4 md:p-10 flex flex-col justify-center relative shadow-sm overflow-hidden">
             <span className="absolute top-4 left-4 md:top-8 md:left-8 text-[6px] md:text-[9px] font-serif uppercase tracking-[0.3em] text-[#a0a0a0] z-10">Lower Floor One</span>
-            {/* Added object-contain */}
-            <img src="/Images/Building%20Three%20Lower%20Floor%20One.png" alt="Building 3 Lower Floor" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
+            <img src="/Images/Building_Three_Lower_Floor_One.png" alt="Building 3 Lower Floor" className="w-full h-full object-contain mix-blend-multiply opacity-90" />
           </div>
         </div>
       )
@@ -537,7 +560,8 @@ const DigitalFlipbook: React.FC = () => {
       // Sheet 9: Full Bleed Back Image / Secure Data Room
       front: (
         <div className="w-full h-full bg-[#02050a] shadow-[inset_30px_0_80px_rgba(0,0,0,0.8)] relative p-0 overflow-hidden">
-          <img src="/Images/OCEANSIDE%20-%20BUILDING%2003.jpg" alt="Building 3 Render" className="w-full h-full object-cover opacity-90 scale-105" />
+          <img src="/Images/OCEANSIDE%20-%20BUILDING%2003.jpg" alt="Building 3 Render" className="absolute inset-0 w-full h-full object-cover opacity-90 scale-105" />
+          <div className="absolute inset-0 bg-[#02050a]/40 mix-blend-multiply"></div>
         </div>
       ),
       back: (
@@ -563,37 +587,24 @@ const DigitalFlipbook: React.FC = () => {
     }
   ];
 
-  return (
-    <div className="min-h-screen bg-[#0d0f12] flex flex-col items-center justify-center p-2 md:py-12 lg:py-20 overflow-hidden font-sans selection:bg-[#d4af37] selection:text-white"
-         onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEndHandler}>
-      
-      {/* Return to Portal Button - Enhanced Prominence */}
-      <button className="fixed top-4 left-4 md:top-8 md:left-8 z-[100] px-4 py-2 md:px-6 md:py-3 bg-[#08090a]/90 backdrop-blur-sm border-2 border-[#d4af37] text-[#eaeaea] font-mono text-[9px] md:text-[11px] uppercase tracking-[0.2em] flex items-center gap-2 md:gap-3 overflow-hidden group hover:bg-[#d4af37] hover:text-[#02050a] transition-all duration-300 shadow-lg">
-        <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
-        <span className="hidden sm:inline font-semibold">Return to Portal</span>
-        <span className="inline sm:hidden font-semibold">Back</span>
-        <div className="absolute bottom-0 left-0 h-[2px] w-[200%] bg-gradient-to-r from-transparent via-white to-transparent opacity-50 animate-gold-sweep" />
-      </button>
+  // Flatten sheets for mobile app view
+  const mobilePages = sheets.flatMap(sheet => [sheet.front, sheet.back]);
 
-      {/* 3D Styles, Mobile Safari Fixes, & Dog-Ear Physics */}
+  return (
+    <>
       <style dangerouslySetInnerHTML={{__html: `
         @keyframes gold-sweep { 0% { transform: translateX(-100%); } 100% { transform: translateX(50%); } }
         .animate-gold-sweep { animation: gold-sweep 4s linear infinite; }
         
         .flipbook-viewport {
-          perspective: 2500px;
+          perspective: 4500px;
         }
-        @media (min-width: 768px) { .flipbook-viewport { perspective: 4500px; } }
         
-        /* Mobile Hardware Acceleration fixes */
         .flipbook-sheet {
           transform-style: preserve-3d;
-          transition: transform 0.8s cubic-bezier(0.64, 0.04, 0.35, 1);
+          transition: transform 1.2s cubic-bezier(0.64, 0.04, 0.35, 1);
           transform-origin: left center;
           will-change: transform;
-        }
-        @media (min-width: 768px) {
-          .flipbook-sheet { transition: transform 1.2s cubic-bezier(0.64, 0.04, 0.35, 1); }
         }
         
         .flipbook-page {
@@ -606,13 +617,9 @@ const DigitalFlipbook: React.FC = () => {
         }
         
         .book-stack-shadow {
-          box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 30px 60px rgba(0,0,0,0.4);
-        }
-        @media (min-width: 768px) {
-          .book-stack-shadow { box-shadow: 0 60px 120px rgba(0,0,0,0.5), 0 100px 200px rgba(0,0,0,0.4), 0 20px 50px rgba(0,0,0,0.6); }
+          box-shadow: 0 60px 120px rgba(0,0,0,0.5), 0 100px 200px rgba(0,0,0,0.4), 0 20px 50px rgba(0,0,0,0.6);
         }
 
-        /* Dog Ear - Hidden on touch devices to avoid sticky states, shown on hover/desktop */
         .dog-ear-recto, .dog-ear-verso { display: none; }
         .glare-overlay { display: none; }
 
@@ -640,124 +647,200 @@ const DigitalFlipbook: React.FC = () => {
           }
           .sheet-unflipped:hover .glare-overlay, .sheet-flipped:hover .glare-overlay { opacity: 1; }
         }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}} />
 
-      {/* Responsive Aspect Ratio Book Container - Enforcing Strict 16:9 Landscape Aspect Ratio */}
-      <div className="relative w-[95vw] md:w-[90vw] max-w-[1400px] aspect-video flipbook-viewport book-stack-shadow flex bg-[#010203] mt-8 md:mt-0">
+      {/* --- MOBILE NATIVE APP VIEW (< 768px) --- */}
+      <div className="flex md:hidden flex-col fixed inset-0 w-full h-[100dvh] bg-[#050810] z-40">
         
-        {/* Left Base Page (Closed Book Logic) */}
-        {flippedCount > 0 && (
-          <div className="w-1/2 h-full bg-[#02050a] border-l border-[#1a1a1a] shadow-[inset_-20px_0_50px_rgba(0,0,0,0.95)] md:shadow-[inset_-40px_0_100px_rgba(0,0,0,0.95)]"></div>
-        )}
-        
-        {/* Right Base Page (Closed Book Logic) */}
-        {flippedCount < totalSheets && (
-          <div className={`w-1/2 h-full bg-[#02050a] border-r border-[#1a1a1a] shadow-[inset_20px_0_50px_rgba(0,0,0,0.95)] md:shadow-[inset_40px_0_100px_rgba(0,0,0,0.95)] ${flippedCount === 0 ? 'ml-auto' : ''}`}></div>
-        )}
+        {/* Mobile App Header */}
+        <div className="h-14 flex items-center justify-between px-4 bg-[#08090a] border-b border-[#222] pt-[env(safe-area-inset-top)] shrink-0 z-10 shadow-md">
+          <button 
+            onClick={() => window.location.href = '/'}
+            className="text-[#eaeaea] font-mono text-[9px] uppercase tracking-widest flex items-center gap-2 relative overflow-hidden group py-2 bg-transparent border-none cursor-pointer"
+          >
+            <ArrowLeft size={12} className="transition-transform group-hover:-translate-x-1" /> Portal
+            <div className="absolute bottom-0 left-0 h-[1px] w-[200%] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-80 animate-gold-sweep" />
+          </button>
+          <div className="font-serif text-[#d4af37] text-[12px] tracking-widest uppercase">1816 Maxwell</div>
+          <div className="w-16"></div> {/* Spacer to keep title centered */}
+        </div>
 
-        {/* Deep Central Spine Shadow (Only shown when book is open) */}
-        {flippedCount > 0 && flippedCount < totalSheets && (
-          <div className="absolute left-1/2 top-0 bottom-0 w-16 md:w-32 -ml-8 md:-ml-16 z-40 pointer-events-none mix-blend-multiply flex">
-             <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-black/30 to-black/80"></div>
-             <div className="w-1/2 h-full bg-gradient-to-l from-transparent via-black/30 to-black/80"></div>
+        {/* Mobile Swipeable Pages (Full Screen) */}
+        <div 
+          ref={mobileScrollContainerRef}
+          onScroll={handleMobileScroll}
+          className="flex-1 flex overflow-x-auto snap-x snap-mandatory hide-scrollbar relative z-0"
+        >
+          {mobilePages.map((page, i) => (
+            <div key={`mob-page-${i}`} className="min-w-full h-full snap-center relative overflow-y-auto overflow-x-hidden">
+              {page}
+            </div>
+          ))}
+        </div>
+
+        {/* Mobile iOS-style Bottom Tab Bar */}
+        <div className="h-20 bg-[#08090a]/95 backdrop-blur-md border-t border-[#222] flex items-center justify-between px-6 pb-[calc(1rem+env(safe-area-inset-bottom))] shrink-0 z-10">
+          <button 
+            onClick={() => scrollMobileTo(Math.max(0, mobilePageIndex - 1))} 
+            disabled={mobilePageIndex === 0} 
+            className="p-3 text-[#eaeaea] disabled:opacity-30 active:scale-95 transition-transform bg-[#111] rounded-full"
+            aria-label="Previous Page"
+          >
+            <ChevronLeft size={20} strokeWidth={2} />
+          </button>
+          
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-[#a0a0a0]">
+              Page {mobilePageIndex + 1} / {mobilePages.length}
+            </span>
+            <div className="flex gap-[2px]">
+              {Array.from({ length: mobilePages.length }).map((_, i) => (
+                <div 
+                  key={`mob-dot-${i}`} 
+                  className={`h-[2px] transition-all duration-300 ${
+                    i === mobilePageIndex ? 'w-[12px] bg-[#d4af37]' : 'w-[4px] bg-[#333]'
+                  }`} 
+                />
+              ))}
+            </div>
           </div>
-        )}
 
-        {/* Dynamic Sheets Container */}
-        <div className={`absolute right-0 w-1/2 h-full z-10 ${flippedCount === 0 ? 'w-full md:w-1/2' : ''}`}>
-          {sheets.map((sheet, index) => {
-            const isFlipped = index < flippedCount;
-            const zIndex = isFlipped ? index + 1 : totalSheets - index;
-            const isInteractive = index === flippedCount || index === flippedCount - 1;
-
-            return (
-              <div
-                key={`sheet-${index}`}
-                onClick={() => isInteractive && handlePageClick(index)}
-                className={`absolute inset-0 w-full h-full flipbook-sheet cursor-pointer ${
-                  isFlipped ? 'sheet-flipped' : 'sheet-unflipped'
-                }`}
-                style={{
-                  transform: isFlipped ? 'rotateY(-180deg)' : 'rotateY(0deg)',
-                  zIndex: zIndex,
-                  pointerEvents: isInteractive ? 'auto' : 'none',
-                  // Prevent touch actions from breaking the transform during swipe
-                  touchAction: 'pan-y'
-                }}
-              >
-                {/* Recto (Front Page) */}
-                <div className="absolute inset-0 w-full h-full flipbook-page bg-[#f2f0e9] border-r border-[#111]/10 overflow-hidden shadow-[-2px_0_10px_rgba(0,0,0,0.05)]">
-                  {sheet.front}
-                  <div className="absolute inset-0 glare-overlay z-30"></div>
-                  {index === flippedCount && index < totalSheets - 1 && (
-                    <div className="dog-ear-recto"></div>
-                  )}
-                </div>
-
-                {/* Verso (Back Page) */}
-                <div className="absolute inset-0 w-full h-full flipbook-page flipbook-page-back bg-[#f2f0e9] border-l border-[#111]/10 overflow-hidden shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
-                  {sheet.back}
-                  <div className="absolute inset-0 glare-overlay z-30 transform scale-x-[-1]"></div>
-                  {index === flippedCount - 1 && index >= 0 && (
-                    <div className="dog-ear-verso"></div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <button 
+            onClick={() => scrollMobileTo(Math.min(mobilePages.length - 1, mobilePageIndex + 1))} 
+            disabled={mobilePageIndex === mobilePages.length - 1} 
+            className="p-3 text-[#eaeaea] disabled:opacity-30 active:scale-95 transition-transform bg-[#111] rounded-full"
+            aria-label="Next Page"
+          >
+            <ChevronRight size={20} strokeWidth={2} />
+          </button>
         </div>
       </div>
 
-      {/* Terminal Navigation - Perfectly Centered & Accessible */}
-      <div className="mx-auto mt-8 md:mt-12 flex items-center justify-center gap-6 md:gap-12 text-[#7a7a7a] bg-[#08090a] px-6 md:px-10 py-3 md:py-4 border border-[#222] shadow-xl rounded-sm">
-        <button 
-          onClick={turnPrev}
-          disabled={flippedCount === 0}
-          className="p-3 transition-all duration-300 disabled:opacity-20 hover:-translate-x-1 hover:text-[#d4af37] bg-[#111] rounded-full"
-          aria-label="Previous Page"
-        >
-          <ChevronLeft size={20} strokeWidth={2} />
-        </button>
+      {/* --- DESKTOP FLIPBOOK VIEW (>= 768px) --- */}
+      <div className="hidden md:flex flex-col items-center justify-center w-full min-h-screen pt-20 pb-12 bg-[#0d0f12] selection:bg-[#d4af37] selection:text-white"
+           onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEndHandler}>
         
-        <div className="flex flex-col md:flex-row items-center gap-3 md:gap-8">
-          <span className="font-mono text-[9px] md:text-[11px] tracking-[0.2em] md:tracking-[0.4em] uppercase text-[#a0a0a0]">
-            Spread 0{Math.max(1, flippedCount)} / 0{totalSheets}
-          </span>
-          <div className="flex gap-[3px]">
-            {Array.from({ length: totalSheets }).map((_, i) => (
-              <div 
-                key={`dot-${i}`} 
-                className={`h-[10px] md:h-[14px] w-[3px] md:w-[4px] transition-colors duration-500 rounded-sm ${
-                  i < flippedCount ? 'bg-[#d4af37]' : i === flippedCount ? 'bg-[#eaeaea]' : 'bg-[#333]'
-                }`} 
-              />
-            ))}
+        {/* Desktop Return to Portal Button */}
+        <button 
+          onClick={() => window.location.href = '/'}
+          className="fixed top-8 left-8 z-[100] py-2 text-[#eaeaea] font-mono text-[11px] uppercase tracking-[0.2em] flex items-center gap-3 overflow-hidden group hover:text-[#d4af37] transition-all duration-300 bg-transparent border-none cursor-pointer"
+        >
+          <ArrowLeft size={14} className="transition-transform group-hover:-translate-x-1" />
+          <span className="font-semibold">Return to Portal</span>
+          <div className="absolute bottom-0 left-0 h-[1px] w-[200%] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-80 animate-gold-sweep" />
+        </button>
+
+        {/* Desktop 16:9 Book Container */}
+        <div className="relative w-[90vw] max-w-[1400px] aspect-video flipbook-viewport book-stack-shadow flex bg-[#010203]">
+          
+          {/* Left Base Page */}
+          {flippedCount > 0 && (
+            <div className="w-1/2 h-full bg-[#02050a] border-l border-[#1a1a1a] shadow-[inset_-40px_0_100px_rgba(0,0,0,0.95)]"></div>
+          )}
+          
+          {/* Right Base Page */}
+          {flippedCount < totalSheets && (
+            <div className={`w-1/2 h-full bg-[#02050a] border-r border-[#1a1a1a] shadow-[inset_40px_0_100px_rgba(0,0,0,0.95)] ${flippedCount === 0 ? 'ml-auto' : ''}`}></div>
+          )}
+
+          {/* Spine Shadow */}
+          {flippedCount > 0 && flippedCount < totalSheets && (
+            <div className="absolute left-1/2 top-0 bottom-0 w-32 -ml-16 z-40 pointer-events-none mix-blend-multiply flex">
+               <div className="w-1/2 h-full bg-gradient-to-r from-transparent via-black/30 to-black/80"></div>
+               <div className="w-1/2 h-full bg-gradient-to-l from-transparent via-black/30 to-black/80"></div>
+            </div>
+          )}
+
+          {/* Desktop Sheets Container */}
+          <div className={`absolute right-0 w-1/2 h-full z-10 ${flippedCount === 0 ? 'w-1/2' : ''}`}>
+            {sheets.map((sheet, index) => {
+              const isFlipped = index < flippedCount;
+              const zIndex = isFlipped ? index + 1 : totalSheets - index;
+              const isInteractive = index === flippedCount || index === flippedCount - 1;
+
+              return (
+                <div
+                  key={`desktop-sheet-${index}`}
+                  onClick={() => isInteractive && handlePageClick(index)}
+                  className={`absolute inset-0 w-full h-full flipbook-sheet cursor-pointer ${
+                    isFlipped ? 'sheet-flipped' : 'sheet-unflipped'
+                  }`}
+                  style={{
+                    transform: isFlipped ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+                    zIndex: zIndex,
+                    pointerEvents: isInteractive ? 'auto' : 'none'
+                  }}
+                >
+                  <div className="absolute inset-0 w-full h-full flipbook-page bg-[#f2f0e9] border-r border-[#111]/10 overflow-hidden shadow-[-2px_0_10px_rgba(0,0,0,0.05)]">
+                    {sheet.front}
+                    <div className="absolute inset-0 glare-overlay z-30"></div>
+                    {index === flippedCount && index < totalSheets - 1 && <div className="dog-ear-recto"></div>}
+                  </div>
+
+                  <div className="absolute inset-0 w-full h-full flipbook-page flipbook-page-back bg-[#f2f0e9] border-l border-[#111]/10 overflow-hidden shadow-[2px_0_10px_rgba(0,0,0,0.05)]">
+                    {sheet.back}
+                    <div className="absolute inset-0 glare-overlay z-30 transform scale-x-[-1]"></div>
+                    {index === flippedCount - 1 && index >= 0 && <div className="dog-ear-verso"></div>}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <button 
-          onClick={turnNext}
-          disabled={flippedCount === totalSheets}
-          className="p-3 transition-all duration-300 disabled:opacity-20 hover:translate-x-1 hover:text-[#d4af37] bg-[#111] rounded-full"
-          aria-label="Next Page"
-        >
-          <ChevronRight size={20} strokeWidth={2} />
-        </button>
+        {/* Desktop Terminal Navigation */}
+        <div className="mx-auto mt-12 flex items-center justify-center gap-12 text-[#7a7a7a] bg-[#08090a] px-10 py-4 border border-[#222] shadow-xl rounded-sm">
+          <button 
+            onClick={turnPrev}
+            disabled={flippedCount === 0}
+            className="p-3 transition-all duration-300 disabled:opacity-20 hover:-translate-x-1 hover:text-[#d4af37] bg-[#111] rounded-full"
+            aria-label="Previous Page"
+          >
+            <ChevronLeft size={20} strokeWidth={2} />
+          </button>
+          
+          <div className="flex items-center gap-8">
+            <span className="font-mono text-[11px] tracking-[0.4em] uppercase text-[#a0a0a0]">
+              Spread 0{Math.max(1, flippedCount)} / 0{totalSheets}
+            </span>
+            <div className="flex gap-[3px]">
+              {Array.from({ length: totalSheets }).map((_, i) => (
+                <div 
+                  key={`desktop-dot-${i}`} 
+                  className={`h-[14px] w-[4px] transition-colors duration-500 rounded-sm ${
+                    i < flippedCount ? 'bg-[#d4af37]' : i === flippedCount ? 'bg-[#eaeaea]' : 'bg-[#333]'
+                  }`} 
+                />
+              ))}
+            </div>
+          </div>
+
+          <button 
+            onClick={turnNext}
+            disabled={flippedCount === totalSheets}
+            className="p-3 transition-all duration-300 disabled:opacity-20 hover:translate-x-1 hover:text-[#d4af37] bg-[#111] rounded-full"
+            aria-label="Next Page"
+          >
+            <ChevronRight size={20} strokeWidth={2} />
+          </button>
+        </div>
       </div>
 
-      {}
       {/* AI Assistant Floating Button */}
       <button 
         onClick={() => setIsChatOpen(true)}
-        className={`fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[90] w-12 h-12 md:w-16 md:h-16 bg-[#111] border border-[#d4af37] text-[#d4af37] rounded-full shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center justify-center hover:scale-110 transition-all duration-300 ${isChatOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
+        className={`fixed bottom-[100px] md:bottom-10 right-6 md:right-10 z-[90] w-14 h-14 md:w-16 md:h-16 bg-[#111] border border-[#d4af37] text-[#d4af37] rounded-full shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center justify-center hover:scale-110 transition-all duration-300 ${isChatOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}
       >
-        <MessageSquare size={20} className="md:w-6 md:h-6" />
+        <MessageSquare size={24} className="md:w-6 md:h-6" />
       </button>
 
       {/* AI Assistant Chat Sidebar */}
       <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-[#05080f] border-l border-[#222] shadow-2xl z-[100] transform transition-transform duration-500 ease-[cubic-bezier(0.64,0.04,0.35,1)] flex flex-col ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-[#222] bg-[#020305]">
+        <div className="flex items-center justify-between p-6 border-b border-[#222] bg-[#020305] pt-[max(1.5rem,env(safe-area-inset-top))]">
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse"></div>
             <div>
@@ -765,13 +848,13 @@ const DigitalFlipbook: React.FC = () => {
               <p className="font-mono text-[#7a7a7a] text-[8px] uppercase tracking-[0.2em]">1816 Maxwell Data Room</p>
             </div>
           </div>
-          <button onClick={() => setIsChatOpen(false)} className="text-[#7a7a7a] hover:text-[#eaeaea] transition-colors">
+          <button onClick={() => setIsChatOpen(false)} className="text-[#7a7a7a] hover:text-[#eaeaea] transition-colors p-2">
             <X size={20} />
           </button>
         </div>
 
         {/* Messages List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-[#222] scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 hide-scrollbar">
           {messages.map((msg, idx) => (
             <div key={`msg-${idx}`} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               <div className={`max-w-[85%] p-4 rounded-sm ${msg.role === 'user' ? 'bg-[#1a1a1a] border border-[#333] text-[#eaeaea]' : 'bg-transparent border-l-2 border-[#d4af37] text-[#a0a0a0]'}`}>
@@ -792,27 +875,26 @@ const DigitalFlipbook: React.FC = () => {
         </div>
 
         {/* Input Area */}
-        <div className="p-6 border-t border-[#222] bg-[#020305]">
+        <div className="p-4 md:p-6 border-t border-[#222] bg-[#020305] pb-[max(1rem,env(safe-area-inset-bottom))]">
           <form onSubmit={handleSendMessage} className="flex items-center gap-3">
             <input 
               type="text" 
               value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="Ask about returns, specs, or market..."
-              className="flex-1 bg-[#111] border border-[#333] text-[#eaeaea] p-3 md:p-4 font-mono text-[10px] focus:outline-none focus:border-[#d4af37] transition-colors placeholder:text-[#5a5a5a]"
+              className="flex-1 bg-[#111] border border-[#333] text-[#eaeaea] p-4 font-mono text-[10px] focus:outline-none focus:border-[#d4af37] transition-colors placeholder:text-[#5a5a5a] rounded-sm"
             />
             <button 
               type="submit" 
               disabled={isAILoading || !userInput.trim()}
-              className="bg-[#d4af37] text-[#05080f] p-3 md:p-4 hover:bg-[#b8952b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-[#d4af37] text-[#05080f] p-4 hover:bg-[#b8952b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed rounded-sm"
             >
               <Send size={16} />
             </button>
           </form>
         </div>
       </div>
-
-    </div>
+    </>
   );
 };
 

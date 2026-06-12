@@ -365,9 +365,10 @@ export default function App() {
         <DigitalFlipbook />
       ) : (
       <>
+        {}
         {/* Premium Header Navigation (Mobile App Optimized) */}
         <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl pt-safe select-none">
-          <div className="max-w-[100rem] mx-auto px-4 md:px-6 py-3 lg:py-0 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-0">
+          <div className="max-w-[100rem] mx-auto px-4 md:px-6 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 py-2 lg:py-0">
             
             {/* Top Row: Logo & Mobile Action Button */}
             <div className="flex items-center justify-between w-full lg:w-auto">
@@ -391,7 +392,7 @@ export default function App() {
             </div>
             
             {/* Scrollable Tabs Row (Desktop & Mobile App Style) */}
-            <div className="flex items-center overflow-x-auto hide-scrollbar w-full lg:w-auto bg-slate-900/40 lg:p-1 rounded-xl border border-transparent lg:border-slate-800/50 backdrop-blur-md snap-x">
+            <div className="flex items-center overflow-x-auto hide-scrollbar w-full lg:w-auto bg-slate-900/40 lg:p-1 rounded-xl border border-transparent lg:border-slate-800/50 backdrop-blur-md snap-x lg:mb-0 mb-2">
               {['overview', 'plan', 'comps', 'financials', 'team', 'deck'].map((tab) => (
                 <button
                   key={tab}
@@ -417,6 +418,7 @@ export default function App() {
           </div>
         </nav>
 
+        {}
         {/* Hero Animated Sliding Panels */}
         <div className="relative min-h-[85vh] lg:min-h-[90vh] flex items-center justify-center pt-28 lg:pt-20 overflow-hidden">
           <div className="absolute inset-0 z-0">
@@ -505,6 +507,7 @@ export default function App() {
 
         <GoldBeamX />
 
+        {}
         <main id="main-content" className="max-w-[100rem] mx-auto px-4 md:px-6 py-8 lg:py-12 relative scroll-mt-32">
           
           {/* Executive Summary */}
@@ -722,6 +725,7 @@ export default function App() {
             </div>
           )}
 
+          {}
           {/* HIGH-DENSITY FINANCIAL DASHBOARD */}
           {activeTab === 'financials' && (
             <div className="animate-in fade-in duration-700 relative pt-2 flex flex-col gap-4 sm:gap-6">
@@ -993,6 +997,7 @@ export default function App() {
 
         </main>
         
+        {}
         {/* Institutional Call-to-Action Footer */}
         <footer className="bg-[#030408] border-t border-slate-800/60 py-20 sm:py-32 relative overflow-hidden select-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none"></div>
@@ -1015,6 +1020,7 @@ export default function App() {
       </>
       )}
 
+      {}
       {/* Secure Contact Modal (Responsive App fixes) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-safe">
