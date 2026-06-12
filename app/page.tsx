@@ -1,6 +1,5 @@
 'use client';
 
-/* STREAMING_CHUNK:Loading core React and Next.js dynamic imports... */
 import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import DigitalFlipbook from './DigitalFlipbook';
@@ -40,7 +39,6 @@ Lock,
 RefreshCw
 } from 'lucide-react';
 
-/* STREAMING_CHUNK:Initializing dynamic ArchitectureViewer import... */
 // Dynamic import for 3D viewer to prevent SSR issues with Three.js
 const ArchitectureViewer = dynamic(() => import('./ArchitectureViewer'), { ssr: false });
 
@@ -59,7 +57,6 @@ b2Floor1: '/Images/Building%20Two%20First%20Floor.png',
 b3Lower: '/Images/Building%20Three%20Lower%20Floor%20One.png',
 };
 
-/* STREAMING_CHUNK:Defining static market and timeline data... */
 const COMPARATIVE_SET = [
 {
 name: "The Stephanie Inn",
@@ -89,7 +86,6 @@ const PRE_DEV_TIMELINE = [
 { milestone: "Schematic Structural Drafting (Mighty Buildings)", status: "Completed", cost: "$145k" }
 ];
 
-/* STREAMING_CHUNK:Configuring custom UI components... */
 interface TabButtonProps {
 active: boolean;
 label: string;
@@ -104,7 +100,6 @@ className={px-8 py-5 text-[11px] font-bold uppercase tracking-[0.2em] transition
 {label}
 
 
-/* STREAMING_CHUNK:Configuring mobile-responsive slider controls... */
 interface SliderProps {
 label: string;
 min: number;
@@ -118,13 +113,11 @@ isBaseline: boolean;
 
 const CustomSlider: React.FC = ({ label, min, max, step, value, onChange, format, isBaseline }) => (
 
-/* STREAMING_CHUNK:Loading cinematic light beam elements... */
 // Cinematic Gold Light Beam Components
 const GoldBeamX = ({ className = "" }) => (
 
 const GoldBeamY = ({ className = "" }) => (
 
-/* STREAMING_CHUNK:Initializing main application state and variables... */
 export default function App() {
 // Added '3dmodel' to the allowed tab types
 const [activeTab, setActiveTab] = useState<'overview' | 'plan' | 'comps' | 'financials' | 'team' | 'deck' | '3dmodel'>('financials');
@@ -135,7 +128,6 @@ const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
 // "Source of Truth" Toggle State
 const [isBaseline, setIsBaseline] = useState(true);
 
-/* STREAMING_CHUNK:Setting up financial simulation state variables... */
 // Advanced Interactive Financial Simulator variables (9 Variables)
 const [userCommitment, setUserCommitment] = useState(1000000);
 const [simulatedADR, setSimulatedADR] = useState(1101); // Locked to Y3 Stabilized CSV
@@ -161,7 +153,6 @@ setSimulatedExitCap(7.0);
 setSimulatedInterestRate(8.0);
 };
 
-/* STREAMING_CHUNK:Defining utility handlers and timers... */
 // Wrapper for sliders to auto-unlock when user drags them
 const handleSliderChange = (setter: any) => (value: number) => {
 if (isBaseline) setIsBaseline(false);
@@ -195,7 +186,6 @@ setCurrentHeroSlide((prev) => (prev + 1) % heroSlides.length);
 return () => clearInterval(timer);
 }, [heroSlides.length]);
 
-/* STREAMING_CHUNK:Calculating core financial engine outputs... */
 // Core Math Engine
 const totalGsf = (simulatedKeys * simulatedRoomSqft) + simulatedAmenitySqft;
 const totalProjectCost = totalGsf * simulatedCostPsf;
@@ -247,7 +237,6 @@ const deptPercent = (simulatedDepartmentExpenses / totalSimulatedRevenue) * 100;
 const fixedPercent = ((simulatedUndistributedExpenses + simulatedTaxes + simulatedInsurance + simulatedMgmtFee) / totalSimulatedRevenue) * 100;
 const noiPercent = (simulatedNOI / totalSimulatedRevenue) * 100;
 
-/* STREAMING_CHUNK:Generating 5-year operational projection table data... */
 const generateTableData = () => {
 return [1, 2, 3, 4, 5].map(year => {
 const occ = year === 1 ? simulatedOcc - 4 : year === 2 ? simulatedOcc - 2 : simulatedOcc;
@@ -292,6 +281,7 @@ setTimeout(() => setCopiedEmail(null), 2000);
 
 const handleTabClick = (tabId: string) => {
 setActiveTab(tabId as any);
+// Modified to also exclude '3dmodel' from auto-scrolling
 if (tabId !== 'deck' && tabId !== '3dmodel') {
 setTimeout(() => {
 const element = document.getElementById('main-content');
@@ -305,7 +295,6 @@ window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
 }
 };
 
-/* STREAMING_CHUNK:Rendering application layout and CSS overrides... */
 return (
 
 
@@ -338,7 +327,7 @@ return (
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
   `}</style>
 
-  {/* STREAMING_CHUNK:Routing conditional views (Flipbook vs 3D Model vs Portal)... */}
+  {/* Conditional Rendering for Full-Screen Components */}
   {activeTab === 'deck' ? (
     <DigitalFlipbook />
   ) : activeTab === '3dmodel' ? (
@@ -371,7 +360,6 @@ return (
           </button>
         </div>
         
-        {/* STREAMING_CHUNK:Rendering main navigation tabs including new 3D Model tab... */}
         {/* Scrollable Tabs Row (Desktop & Mobile App Style) */}
         <div className="flex items-center overflow-x-auto hide-scrollbar w-full lg:w-auto bg-slate-900/40 lg:p-1 rounded-xl border border-transparent lg:border-slate-800/50 backdrop-blur-md snap-x lg:mb-0 mb-2">
           {['overview', 'plan', 'comps', 'financials', 'team', 'deck', '3dmodel'].map((tab) => (
@@ -400,7 +388,6 @@ return (
     </nav>
 
     
-    {/* STREAMING_CHUNK:Rendering Hero Section with animated sliders... */}
     {/* Hero Animated Sliding Panels */}
     <div className="relative min-h-[85vh] lg:min-h-[90vh] flex items-center justify-center pt-28 lg:pt-20 overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -490,7 +477,6 @@ return (
     <GoldBeamX />
 
     
-    /* STREAMING_CHUNK:Rendering main scrolling content container... */
     <main id="main-content" className="max-w-[100rem] mx-auto px-4 md:px-6 py-8 lg:py-12 relative scroll-mt-32">
       
       {/* Executive Summary */}
@@ -541,7 +527,6 @@ return (
         </div>
       )}
 
-      /* STREAMING_CHUNK:Rendering Master Plan tab content... */
       {/* Master Plan Tab */}
       {activeTab === 'plan' && (
         <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
@@ -610,7 +595,6 @@ return (
         </div>
       )}
 
-      /* STREAMING_CHUNK:Rendering Market and Demographics Comps... */
       {/* Market & Comps Tab */}
       {activeTab === 'comps' && (
         <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
@@ -710,7 +694,6 @@ return (
         </div>
       )}
 
-      /* STREAMING_CHUNK:Rendering Interactive Financial Pro Forma Engine... */
       {/* HIGH-DENSITY FINANCIAL DASHBOARD */}
       {activeTab === 'financials' && (
         <div className="animate-in fade-in duration-700 relative pt-2 flex flex-col gap-4 sm:gap-6">
@@ -907,7 +890,6 @@ return (
         </div>
       )}
 
-      /* STREAMING_CHUNK:Rendering Project Team and Sponsorship details... */
       {/* Sponsorship Team Tab */}
       {activeTab === 'team' && (
         <div className="space-y-12 lg:space-y-20 animate-in fade-in duration-700">
@@ -984,7 +966,6 @@ return (
     </main>
     
     {}
-    /* STREAMING_CHUNK:Rendering Call to Action Footer... */
     {/* Institutional Call-to-Action Footer */}
     <footer className="bg-[#030408] border-t border-slate-800/60 py-20 sm:py-32 relative overflow-hidden select-none">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none"></div>
@@ -1008,7 +989,6 @@ return (
   )}
 
   {}
-  /* STREAMING_CHUNK:Rendering Secure Data Room Request Modal... */
   {/* Secure Contact Modal (Responsive App fixes) */}
   {isModalOpen && (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-safe">
