@@ -91,7 +91,7 @@ interface TabButtonProps {
 const TabButton: React.FC<TabButtonProps> = ({ active, label, onClick }) => (
   <button
     onClick={onClick}
-    className={`px-8 py-5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border-b-2 whitespace-nowrap ${
+    className={`px-8 py-5 text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 border-b-2 whitespace-nowrap select-none active:scale-95 ${
       active 
         ? 'border-blue-500 text-blue-400 bg-transparent shadow-[0_10px_20px_-10px_rgba(59,130,246,0.5)]' 
         : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-800'
@@ -113,7 +113,7 @@ interface SliderProps {
 }
 
 const CustomSlider: React.FC<SliderProps> = ({ label, min, max, step, value, onChange, format, isBaseline }) => (
-  <div className="space-y-1.5 transition-opacity duration-300 w-full">
+  <div className="space-y-1.5 transition-opacity duration-300 w-full select-none">
     <div className="flex justify-between items-center">
       <span className="text-slate-400 font-semibold uppercase tracking-widest text-[9px] flex items-center">
         {isBaseline && <Lock size={8} className="mr-1.5 text-blue-500" />}
@@ -123,7 +123,7 @@ const CustomSlider: React.FC<SliderProps> = ({ label, min, max, step, value, onC
         {format(value)}
       </span>
     </div>
-    <div className="py-2"> {/* Added touch padding for mobile slider interaction */}
+    <div className="py-2"> {/* Touch padding for mobile slider interaction */}
       <input 
         type="range" 
         min={min} 
@@ -223,7 +223,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, [heroSlides.length]);
 
-  // Core Math Engine (Calibrated to exactly hit the CSV Baseline when defaults are active)
+  // Core Math Engine
   const totalGsf = (simulatedKeys * simulatedRoomSqft) + simulatedAmenitySqft;
   const totalProjectCost = totalGsf * simulatedCostPsf;
   
@@ -236,7 +236,6 @@ export default function App() {
   const rawRoomNights = simulatedKeys * daysInYear * (simulatedOcc / 100);
   const simulatedRoomRevenue = rawRoomNights * simulatedADR;
   
-  // Calibrated ratio to ensure 24-keys at 66% hits exactly $9.16M Gross Rev per the CSV
   const amenityRatio = simulatedAmenitySqft / 20800; 
   const nonRoomRevRatio = 0.30535 * Math.min(amenityRatio, 1.5); 
   const totalSimulatedRevenue = simulatedRoomRevenue / (1 - nonRoomRevRatio); 
@@ -251,9 +250,8 @@ export default function App() {
   const simulatedMgmtFee = totalSimulatedRevenue * 0.04;
   const simulatedNOI = simulatedGrossOperatingProfit - (simulatedTaxes + simulatedInsurance + simulatedMgmtFee);
   
-  const simulatedCapExReserve = totalSimulatedRevenue * 0.04; // Matches Y3 NOI After Reserve deduction from CSV
+  const simulatedCapExReserve = totalSimulatedRevenue * 0.04; 
   
-  // Institutional Covenants
   const annualDebtService = debtAmount * (simulatedInterestRate / 100);
   const dscr = simulatedNOI / annualDebtService;
   const isDSCRSafe = dscr >= 1.25;
@@ -276,12 +274,9 @@ export default function App() {
   const fixedPercent = ((simulatedUndistributedExpenses + simulatedTaxes + simulatedInsurance + simulatedMgmtFee) / totalSimulatedRevenue) * 100;
   const noiPercent = (simulatedNOI / totalSimulatedRevenue) * 100;
 
-  // Dynamic 5-Year Table Generator (Detailed P&L matching CSV structure)
   const generateTableData = () => {
     return [1, 2, 3, 4, 5].map(year => {
-      // Scale occupancy down for ramp-up years (Year 1: -4%, Year 2: -2%)
       const occ = year === 1 ? simulatedOcc - 4 : year === 2 ? simulatedOcc - 2 : simulatedOcc;
-      // 3% Annual ADR Growth starting from Y3 Baseline
       const adr = simulatedADR * Math.pow(1.03, year - 3);
       
       const nights = simulatedKeys * 365 * (occ / 100);
@@ -325,7 +320,6 @@ export default function App() {
       setTimeout(() => {
         const element = document.getElementById('main-content');
         if (element) {
-          // Adjust scroll offset based on screen size (mobile nav is taller)
           const navHeight = window.innerWidth < 1024 ? 120 : 80;
           const elementPosition = element.getBoundingClientRect().top;
           const offsetPosition = elementPosition + window.pageYOffset - navHeight;
@@ -336,7 +330,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-100 font-sans selection:bg-blue-500/30 overflow-x-hidden antialiased">
+    <div className="min-h-screen bg-[#050810] text-slate-100 font-sans selection:bg-blue-500/30 overflow-x-hidden antialiased pb-safe">
       
       <style>{`
         @keyframes beam-slide-x {
@@ -347,22 +341,32 @@ export default function App() {
           0% { transform: translateY(-200%); }
           100% { transform: translateY(400%); }
         }
-        /* Mobile-friendly horizontal scrolling without ugly scrollbars */
+        /* Mobile App Optimizations */
+        * {
+          -webkit-tap-highlight-color: transparent;
+        }
+        body {
+          overscroll-behavior-y: none; /* Stops pull-to-refresh bounce on mobile */
+        }
         .hide-scrollbar::-webkit-scrollbar {
           display: none;
         }
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
+          -webkit-overflow-scrolling: touch; /* Smooth momentum scrolling */
         }
+        /* Safe area handling for notched phones */
+        .pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       `}</style>
 
       {activeTab === 'deck' ? (
         <DigitalFlipbook />
       ) : (
       <>
-        {/* Premium Header Navigation (Mobile Optimized) */}
-        <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl">
+        {/* Premium Header Navigation (Mobile App Optimized) */}
+        <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl pt-safe select-none">
           <div className="max-w-[100rem] mx-auto px-4 md:px-6 py-3 lg:py-0 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-0">
             
             {/* Top Row: Logo & Mobile Action Button */}
@@ -380,19 +384,19 @@ export default function App() {
               {/* Mobile Data Room Button */}
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="lg:hidden flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[9px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] transition-all duration-300"
+                className="lg:hidden flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[9px] uppercase tracking-widest active:scale-95 transition-all duration-300"
               >
                 Data Room <ArrowRight size={12} className="ml-1.5" />
               </button>
             </div>
             
-            {/* Scrollable Tabs Row (Desktop & Mobile) */}
+            {/* Scrollable Tabs Row (Desktop & Mobile App Style) */}
             <div className="flex items-center overflow-x-auto hide-scrollbar w-full lg:w-auto bg-slate-900/40 lg:p-1 rounded-xl border border-transparent lg:border-slate-800/50 backdrop-blur-md snap-x">
               {['overview', 'plan', 'comps', 'financials', 'team', 'deck'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => handleTabClick(tab)}
-                  className={`px-4 sm:px-5 py-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-lg shrink-0 snap-center ${
+                  className={`px-4 sm:px-5 py-2.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.2em] transition-all duration-300 rounded-lg shrink-0 snap-center active:scale-95 ${
                     activeTab === tab 
                       ? 'bg-blue-500/20 text-blue-300 shadow-[0_0_15px_rgba(59,130,246,0.2)] border border-blue-500/30' 
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 border border-transparent'
@@ -406,7 +410,7 @@ export default function App() {
             {/* Desktop Data Room Button */}
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="hidden lg:flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] hover:-translate-y-0.5 transition-all duration-300"
+              className="hidden lg:flex items-center px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] uppercase tracking-widest hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] active:scale-95 transition-all duration-300"
             >
               Request Data Room <ArrowRight size={14} className="ml-2" />
             </button>
@@ -433,9 +437,9 @@ export default function App() {
             ))}
           </div>
 
-          <div className="relative z-20 max-w-[100rem] mx-auto px-4 md:px-6 w-full grid lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="relative z-20 max-w-[100rem] mx-auto px-4 md:px-6 w-full grid lg:grid-cols-12 gap-8 lg:gap-12 items-center mt-safe">
             <div className="lg:col-span-8 space-y-5 lg:space-y-6">
-              <span className="inline-flex items-center px-3 py-1.5 sm:px-4 bg-blue-500/10 text-blue-300 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(59,130,246,0.2)]">
+              <span className="inline-flex items-center px-3 py-1.5 sm:px-4 bg-blue-500/10 text-blue-300 rounded-full text-[9px] sm:text-[10px] font-bold tracking-widest uppercase shadow-[0_0_15px_rgba(59,130,246,0.2)] select-none">
                 <Flame size={12} className="mr-1.5 sm:mr-2 text-blue-400 animate-pulse" /> Confidential LP Presentation
               </span>
               <div className="space-y-2 lg:space-y-3">
@@ -453,7 +457,7 @@ export default function App() {
               <div className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4 lg:pt-6">
                 <button 
                   onClick={() => handleTabClick('deck')}
-                  className="w-full sm:w-auto justify-center px-6 lg:px-8 py-3.5 sm:py-3 bg-white text-slate-950 font-bold rounded-xl text-[10px] lg:text-[11px] uppercase tracking-widest hover:bg-slate-200 transition-all duration-300 flex items-center shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+                  className="w-full sm:w-auto justify-center px-6 lg:px-8 py-3.5 sm:py-3 bg-white text-slate-950 font-bold rounded-xl text-[10px] lg:text-[11px] uppercase tracking-widest active:scale-95 transition-all duration-300 flex items-center shadow-[0_0_20px_rgba(255,255,255,0.2)]"
                 >
                   Deep-Dive Portfolio <ArrowDownRight size={16} className="ml-3" />
                 </button>
@@ -462,7 +466,7 @@ export default function App() {
                     <button
                       key={i}
                       onClick={() => setCurrentHeroSlide(i)}
-                      className={`w-2 h-2 rounded-full transition-all ${
+                      className={`w-2 h-2 rounded-full transition-all active:scale-50 ${
                         i === currentHeroSlide ? 'bg-blue-400 w-8 shadow-[0_0_10px_rgba(59,130,246,0.8)]' : 'bg-slate-600 hover:bg-slate-400'
                       }`}
                     />
@@ -471,7 +475,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="lg:col-span-4 bg-transparent space-y-6 lg:space-y-8 relative mt-8 lg:mt-0">
+            <div className="lg:col-span-4 bg-transparent space-y-6 lg:space-y-8 relative mt-8 lg:mt-0 select-none">
               <h3 className="text-white font-bold uppercase tracking-widest text-[10px] lg:text-[11px] flex justify-between items-center">
                 <span>Financial Foundation</span>
                 <span className="text-blue-400 font-mono">1816 Maxwell</span>
@@ -539,7 +543,7 @@ export default function App() {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#050810] via-[#050810]/30 to-transparent pointer-events-none"></div>
-                    <div className="absolute bottom-6 left-6 right-6 lg:bottom-8 lg:left-8 lg:right-8 bg-slate-900/70 backdrop-blur-xl border border-slate-700 p-5 lg:p-8 rounded-2xl pointer-events-none">
+                    <div className="absolute bottom-6 left-6 right-6 lg:bottom-8 lg:left-8 lg:right-8 bg-slate-900/70 backdrop-blur-xl border border-slate-700 p-5 lg:p-8 rounded-2xl pointer-events-none select-none">
                       <h4 className="text-white font-bold text-base sm:text-lg mb-2 sm:mb-3 flex items-center tracking-wide">
                         <Waves size={18} className="mr-2 sm:mr-3 text-blue-400" /> Irreplaceable Real Estate
                       </h4>
@@ -570,7 +574,7 @@ export default function App() {
                       { num: "03", name: "Building Three & Amenities", details: "[12] Luxury Rooms averaging 400 SQ FT each. Combines the Grand Lobby, Signature Restaurant, Rooftop Bar, Executive Conference Center, and Wellness Spa with Weight Room & Yoga facility." }
                     ].map((b, idx) => (
                       <div key={idx} className="relative group flex flex-col sm:flex-row sm:items-start space-y-2 sm:space-y-0 sm:space-x-6">
-                        <span className="text-4xl sm:text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-indigo-400 drop-shadow-md">{b.num}</span>
+                        <span className="text-4xl sm:text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-indigo-400 drop-shadow-md select-none">{b.num}</span>
                         <div>
                           <h4 className="text-lg sm:text-xl font-bold text-white mb-2 sm:mb-3 tracking-wide">{b.name}</h4>
                           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{b.details}</p>
@@ -589,7 +593,7 @@ export default function App() {
                         className="w-full h-full object-contain p-2 sm:p-4 mix-blend-multiply"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-2 select-none">
                       <h4 className="text-white font-bold text-[11px] sm:text-sm uppercase tracking-widest flex items-center">
                         <LayoutTemplate size={16} className="mr-2 sm:mr-3 text-blue-400" /> Page 5 Site Layout Profile
                       </h4>
@@ -599,7 +603,7 @@ export default function App() {
 
                   <GoldBeamX className="opacity-30 my-6 lg:my-8" />
 
-                  <div className="relative group">
+                  <div className="relative group select-none">
                     <div className="relative h-[180px] sm:h-[260px] rounded-2xl overflow-hidden border border-slate-700/50 mb-4 sm:mb-6">
                       <img 
                         src={IMAGES.mightyBuildings} 
@@ -636,7 +640,7 @@ export default function App() {
 
                   <div className="grid sm:grid-cols-2 gap-8 lg:gap-12 pt-4 lg:pt-6">
                     {COMPARATIVE_SET.map((comp, idx) => (
-                      <div key={idx} className="space-y-4 sm:space-y-6">
+                      <div key={idx} className="space-y-4 sm:space-y-6 select-none">
                         <div className="flex justify-between items-start">
                           <h4 className="font-bold text-lg sm:text-xl text-white leading-tight tracking-wide">{comp.name}</h4>
                         </div>
@@ -670,7 +674,7 @@ export default function App() {
                   <GoldBeamX className="block lg:hidden my-8 opacity-30" />
                   
                   <div className="space-y-6 lg:space-y-8 relative">
-                    <h4 className="text-white font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] pb-2 sm:pb-4 flex justify-between items-center relative z-10">
+                    <h4 className="text-white font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] pb-2 sm:pb-4 flex justify-between items-center relative z-10 select-none">
                       <span>Operator Assessment</span>
                       <span className="text-blue-400 font-bold drop-shadow-md">LHW Flag Option</span>
                     </h4>
@@ -681,7 +685,7 @@ export default function App() {
                     <p className="text-xs sm:text-sm text-slate-300 leading-relaxed relative z-10">
                       Aligning with LHW's elite infrastructure provides the asset instant access to their <strong className="text-white">4.5 million Leaders Club members</strong>, significantly lowering client acquisition costs and maximizing distribution reach compared to traditional hard brands.
                     </p>
-                    <div className="p-6 sm:p-8 bg-slate-900/30 sm:bg-transparent rounded-xl sm:rounded-none text-center relative z-10">
+                    <div className="p-6 sm:p-8 bg-slate-900/30 sm:bg-transparent rounded-xl sm:rounded-none text-center relative z-10 select-none">
                       <p className="text-[9px] sm:text-[11px] uppercase tracking-[0.2em] text-slate-400 font-semibold">Underwritten Baseline ADR</p>
                       <p className="text-3xl sm:text-4xl font-mono font-black text-emerald-400 mt-3 sm:mt-4 drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]">$1,038</p>
                       <p className="text-xs sm:text-sm text-slate-500 mt-3 sm:mt-4 leading-relaxed">Sponsor believes peak summer rates will exceed $2,000/night.</p>
@@ -690,7 +694,7 @@ export default function App() {
                   
                   <GoldBeamX className="my-6 lg:my-8 opacity-30" />
 
-                  <div className="relative">
+                  <div className="relative select-none">
                      <h4 className="text-white font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.2em] pb-3 sm:pb-4 mb-4 sm:mb-6 flex items-center">
                        <MapPin size={16} className="mr-2 sm:mr-3 text-blue-400" /> Drive-Market Demographics
                      </h4>
@@ -724,23 +728,23 @@ export default function App() {
               
               {/* HEADER & TOGGLE */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 sm:pb-2 relative z-10 gap-4 sm:gap-0">
-                <div>
+                <div className="select-none">
                   <h4 className="text-white font-bold text-[10px] sm:text-[11px] tracking-[0.2em] uppercase flex items-center mb-1">
                     <Calculator size={12} className="mr-2 text-blue-500" /> Financial Engine Control
                   </h4>
                   <p className="text-[9px] sm:text-[11px] text-slate-400">Total Project GSF: <span className="text-white font-mono">{totalGsf.toLocaleString()}</span> <span className="hidden sm:inline">|</span><span className="sm:hidden block mt-0.5"></span> Capitalization: <span className="text-white font-mono">${(totalProjectCost / 1000000).toFixed(2)}M</span></p>
                 </div>
                 
-                <div className="flex w-full sm:w-auto bg-slate-900/80 rounded-full p-1 border border-slate-700 shadow-xl backdrop-blur-md">
+                <div className="flex w-full sm:w-auto bg-slate-900/80 rounded-full p-1 border border-slate-700 shadow-xl backdrop-blur-md select-none">
                    <button 
                      onClick={handleResetToBaseline}
-                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${isBaseline ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
+                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest active:scale-95 transition-all ${isBaseline ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
                    >
                       <Lock size={10} className="mr-1.5 sm:mr-1.5"/> Source of Truth
                    </button>
                    <button 
                      onClick={() => setIsBaseline(false)}
-                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all ${!isBaseline ? 'bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
+                     className={`flex-1 sm:flex-none justify-center flex items-center px-4 py-2 sm:py-1.5 rounded-full text-[9px] font-bold uppercase tracking-widest active:scale-95 transition-all ${!isBaseline ? 'bg-emerald-500 text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'text-slate-400 hover:text-slate-200'}`}
                    >
                       <Sliders size={10} className="mr-1.5 sm:mr-1.5"/> Simulator
                    </button>
@@ -748,7 +752,7 @@ export default function App() {
               </div>
 
               {/* TOP ROW: KPI OUTPUT CARDS (Responsive Grid) */}
-              <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-6 gap-x-4 bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-y-6 gap-x-4 bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 select-none">
                 <div className="border-r border-slate-800/50 pr-2 sm:pr-4">
                   <p className="text-[8px] sm:text-[9px] text-slate-400 font-mono uppercase tracking-widest mb-1 font-bold">Your LP Stake</p>
                   <p className="text-xl sm:text-2xl font-light text-white drop-shadow-lg">{(LPShareFraction * 100).toFixed(2)}<span className="text-xs sm:text-sm text-slate-500 ml-1">%</span></p>
@@ -776,7 +780,7 @@ export default function App() {
                 
                 {/* Sliders (Utility Belt) */}
                 <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
-                  <p className={`text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center mb-4 sm:mb-6 ${isBaseline ? 'text-blue-400' : 'text-emerald-400'}`}>
+                  <p className={`text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] font-bold flex items-center mb-4 sm:mb-6 select-none ${isBaseline ? 'text-blue-400' : 'text-emerald-400'}`}>
                     <Sliders size={12} className="mr-2" /> Variables
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5 sm:gap-y-4">
@@ -792,7 +796,7 @@ export default function App() {
                 </div>
 
                 {/* Capital Stack */}
-                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between select-none">
                   <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
                     <Building size={12} className="mr-2 text-slate-500" /> Capital Stack
                   </p>
@@ -818,7 +822,7 @@ export default function App() {
                 </div>
 
                 {/* Revenue Waterfall */}
-                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between">
+                <div className="lg:col-span-4 bg-slate-900/40 border border-slate-800/60 p-4 sm:p-5 rounded-xl shadow-lg flex flex-col justify-between select-none">
                   <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase tracking-[0.2em] font-bold mb-4 flex items-center">
                     <TrendingUp size={12} className="mr-2 text-slate-500" /> Revenue Waterfall
                   </p>
@@ -846,7 +850,7 @@ export default function App() {
               </div>
 
               {/* BOTTOM ROW: Detailed 5-Year Table */}
-              <div className="bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 w-full overflow-x-auto hide-scrollbar">
+              <div className="bg-slate-900/40 p-4 sm:p-5 rounded-xl border border-slate-800/60 shadow-lg relative z-10 w-full overflow-x-auto hide-scrollbar select-none">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-4 gap-2 sm:gap-0">
                   <h4 className="text-white font-light text-lg sm:text-xl tracking-tight">
                     {isBaseline ? 'Verified Columbia Pro Forma Snapshot' : 'Dynamic Operating Projection'}
@@ -920,7 +924,7 @@ export default function App() {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-10">
                 
                 {/* Walker Profile */}
-                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 select-none">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-blue-500/20">
                       <Users className="text-blue-400 sm:w-7 sm:h-7" size={24} />
                   </div>
@@ -932,7 +936,7 @@ export default function App() {
                 </div>
 
                 {/* Robert Gutierrez Profile */}
-                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50">
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 select-none">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-emerald-500/20">
                       <Briefcase className="text-emerald-400 sm:w-7 sm:h-7" size={24} />
                   </div>
@@ -944,7 +948,7 @@ export default function App() {
                 </div>
 
                 {/* Placeholder / Ops Profile */}
-                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 md:col-span-2 lg:col-span-1">
+                <div className="relative group p-6 sm:p-8 rounded-2xl bg-slate-900/40 border border-slate-800/50 md:col-span-2 lg:col-span-1 select-none">
                   <div className="w-12 h-12 sm:w-16 sm:h-16 bg-purple-500/10 rounded-xl flex items-center justify-center mb-4 sm:mb-6 border border-purple-500/20">
                       <Layers className="text-purple-400 sm:w-7 sm:h-7" size={24} />
                   </div>
@@ -960,7 +964,7 @@ export default function App() {
               <GoldBeamX className="my-10 lg:my-16" />
 
               <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
-                <div className="relative group lg:pr-10 border-b lg:border-b-0 lg:border-r border-slate-800/50 pb-12 lg:pb-0">
+                <div className="relative group lg:pr-10 border-b lg:border-b-0 lg:border-r border-slate-800/50 pb-12 lg:pb-0 select-none">
                   <div className="flex items-center space-x-4 sm:space-x-6 mb-6 sm:mb-8">
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-emerald-500/10 rounded-2xl border border-emerald-500/20 flex items-center justify-center shrink-0">
                       <Building className="text-emerald-400 sm:w-7 sm:h-7" size={24} />
@@ -975,7 +979,7 @@ export default function App() {
                   </p>
                 </div>
 
-                <div className="relative">
+                <div className="relative select-none">
                   <h4 className="text-white font-bold text-xl sm:text-2xl flex items-center relative z-10 tracking-tight mb-4 sm:mb-6">
                     Target Luxury Brand: LHW
                   </h4>
@@ -990,7 +994,7 @@ export default function App() {
         </main>
         
         {/* Institutional Call-to-Action Footer */}
-        <footer className="bg-[#030408] border-t border-slate-800/60 py-20 sm:py-32 relative overflow-hidden">
+        <footer className="bg-[#030408] border-t border-slate-800/60 py-20 sm:py-32 relative overflow-hidden select-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none"></div>
           <div className="max-w-[100rem] mx-auto px-4 sm:px-6 text-center relative z-10">
             <h2 className="text-3xl sm:text-4xl font-light text-white mb-6 sm:mb-8 tracking-tight">Ready to review the full package?</h2>
@@ -999,11 +1003,11 @@ export default function App() {
             </p>
             <button 
               onClick={() => setIsModalOpen(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] sm:text-[11px] uppercase tracking-widest hover:from-blue-500 hover:to-indigo-500 transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] hover:-translate-y-1"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-10 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-[10px] sm:text-[11px] uppercase tracking-widest hover:from-blue-500 hover:to-indigo-500 transition-all shadow-[0_0_30px_rgba(59,130,246,0.4)] hover:shadow-[0_0_50px_rgba(59,130,246,0.6)] active:scale-95"
             >
               <Download size={18} className="mr-2 sm:mr-3" /> Secure Institutional Access
             </button>
-            <div className="mt-16 sm:mt-24 text-slate-600 text-[8px] sm:text-[10px] font-mono font-bold tracking-widest uppercase px-4">
+            <div className="mt-16 sm:mt-24 text-slate-600 text-[8px] sm:text-[10px] font-mono font-bold tracking-widest uppercase px-4 pb-safe">
               © 2026 Drive Equity Partners. All rights reserved. Confidential Offering Memorandum.
             </div>
           </div>
@@ -1011,26 +1015,26 @@ export default function App() {
       </>
       )}
 
-      {/* Secure Contact Modal (Responsive fixes) */}
+      {/* Secure Contact Modal (Responsive App fixes) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 pb-safe">
           <div className="absolute inset-0 bg-[#050810]/95 backdrop-blur-xl" onClick={() => setIsModalOpen(false)}></div>
           <div className="relative w-full max-w-lg bg-[#0b101f] border border-slate-800/80 rounded-2xl sm:rounded-3xl shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
             <div className="flex justify-between items-start sm:items-center p-6 sm:p-8 border-b border-slate-800/60 gap-4">
-              <div>
+              <div className="select-none">
                 <h3 className="text-lg sm:text-xl font-bold text-white flex items-center tracking-tight">
                   <ShieldCheck className="text-emerald-400 mr-2 sm:mr-3 shrink-0" size={20} /> Secure Data Room Access
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-400 mt-2">Contact the sponsorship team to request the password.</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors p-1 sm:p-0">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white transition-colors p-1 sm:p-0 active:scale-90">
                 <X size={20} className="sm:w-6 sm:h-6" />
               </button>
             </div>
             
             <div className="p-6 sm:p-8 space-y-4 sm:space-y-6">
               <div className="bg-transparent border border-slate-700/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center group hover:bg-slate-900/40 transition-colors shadow-lg gap-4 sm:gap-0">
-                <div className="flex items-center w-full sm:w-auto">
+                <div className="flex items-center w-full sm:w-auto select-none">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-4 sm:mr-5 border border-blue-500/20 shrink-0">
                     <Users className="text-blue-400 sm:w-5 sm:h-5" size={18} />
                   </div>
@@ -1039,14 +1043,14 @@ export default function App() {
                     <p className="text-slate-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Sponsor / Developer</p>
                   </div>
                 </div>
-                <button onClick={() => handleCopy('walktempleton@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
+                <button onClick={() => handleCopy('walktempleton@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md active:scale-95 transition-transform">
                   {copiedEmail === 'walktempleton@gmail.com' ? <Check size={16} className="text-emerald-400 sm:w-[18px] sm:h-[18px]" /> : <Copy size={16} className="sm:w-[18px] sm:h-[18px]" />}
                   <span className="sm:hidden ml-2 text-xs font-bold">COPY EMAIL</span>
                 </button>
               </div>
 
               <div className="bg-transparent border border-slate-700/50 p-4 sm:p-5 rounded-xl sm:rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center group hover:bg-slate-900/40 transition-colors shadow-lg gap-4 sm:gap-0">
-                <div className="flex items-center w-full sm:w-auto">
+                <div className="flex items-center w-full sm:w-auto select-none">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/10 rounded-full flex items-center justify-center mr-4 sm:mr-5 border border-blue-500/20 shrink-0">
                     <Briefcase className="text-blue-400 sm:w-5 sm:h-5" size={18} />
                   </div>
@@ -1055,13 +1059,13 @@ export default function App() {
                     <p className="text-slate-400 text-[9px] sm:text-[10px] font-mono uppercase tracking-[0.2em] mt-1">Capital Markets</p>
                   </div>
                 </div>
-                <button onClick={() => handleCopy('rjg.cal@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md">
+                <button onClick={() => handleCopy('rjg.cal@gmail.com')} className="w-full sm:w-auto flex justify-center p-3 rounded-lg sm:rounded-xl bg-slate-800 text-slate-300 hover:text-white shadow-md active:scale-95 transition-transform">
                   {copiedEmail === 'rjg.cal@gmail.com' ? <Check size={16} className="text-emerald-400 sm:w-[18px] sm:h-[18px]" /> : <Copy size={16} className="sm:w-[18px] sm:h-[18px]" />}
                   <span className="sm:hidden ml-2 text-xs font-bold">COPY EMAIL</span>
                 </button>
               </div>
 
-              <a href="mailto:walktempleton@gmail.com,rjg.cal@gmail.com?subject=1816%20Maxwell%20-%20Secure%20Institutional%20Access%20Request" className="w-full flex items-center justify-center py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg sm:rounded-xl font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] mt-4">
+              <a href="mailto:walktempleton@gmail.com,rjg.cal@gmail.com?subject=1816%20Maxwell%20-%20Secure%20Institutional%20Access%20Request" className="w-full flex items-center justify-center py-3.5 sm:py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg sm:rounded-xl font-bold text-[10px] sm:text-[11px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(59,130,246,0.4)] mt-4 active:scale-95">
                 <Mail size={16} className="mr-2 sm:mr-3 sm:w-[18px] sm:h-[18px]" /> Open Default Email
               </a>
             </div>
