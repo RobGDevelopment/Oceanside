@@ -365,11 +365,11 @@ export default function App() {
         .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
       `}</style>
 
+      {/* TERNARY LEVEL 1: Check if Flipbook is active */}
       {activeTab === 'deck' ? (
         <DigitalFlipbook />
       ) : (
       <>
-        {}
         {/* Premium Header Navigation (Mobile App Optimized) */}
         <nav className="fixed top-0 w-full bg-[#050810]/90 backdrop-blur-xl border-b border-slate-800/60 z-50 transition-all duration-300 shadow-xl pt-safe select-none">
           <div className="max-w-[100rem] mx-auto px-4 md:px-6 min-h-[80px] flex flex-col lg:flex-row lg:items-center justify-between gap-3 lg:gap-4 py-2 lg:py-0">
@@ -422,6 +422,7 @@ export default function App() {
           </div>
         </nav>
 
+        {/* TERNARY LEVEL 2: Check if 3D Viewer is active */}
         {activeTab === '3dmodel' ? (
           <div className="w-full h-screen relative pt-20">
             <ArchitectureViewer />
@@ -516,7 +517,6 @@ export default function App() {
 
           <GoldBeamX />
 
-          {}
           <main id="main-content" className="max-w-[100rem] mx-auto px-4 md:px-6 py-8 lg:py-12 relative scroll-mt-32">
             
             {/* Executive Summary */}
