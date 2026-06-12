@@ -1028,6 +1028,9 @@ export default function App() {
         </>
       )}
 
+      </>
+      )}
+
       {}
       {/* Secure Contact Modal (Responsive App fixes) */}
       {isModalOpen && (
